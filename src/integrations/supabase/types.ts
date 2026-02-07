@@ -387,6 +387,192 @@ export type Database = {
           },
         ]
       }
+      lead_call_logs: {
+        Row: {
+          call_outcome: string | null
+          called_by: string
+          created_at: string | null
+          id: string
+          lead_id: string
+          notes: string | null
+        }
+        Insert: {
+          call_outcome?: string | null
+          called_by: string
+          created_at?: string | null
+          id?: string
+          lead_id: string
+          notes?: string | null
+        }
+        Update: {
+          call_outcome?: string | null
+          called_by?: string
+          created_at?: string | null
+          id?: string
+          lead_id?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_call_logs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_status_history: {
+        Row: {
+          changed_by: string
+          created_at: string | null
+          id: string
+          lead_id: string
+          new_status: string
+          old_status: string | null
+          remarks: string | null
+        }
+        Insert: {
+          changed_by: string
+          created_at?: string | null
+          id?: string
+          lead_id: string
+          new_status: string
+          old_status?: string | null
+          remarks?: string | null
+        }
+        Update: {
+          changed_by?: string
+          created_at?: string | null
+          id?: string
+          lead_id?: string
+          new_status?: string
+          old_status?: string | null
+          remarks?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_status_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          academic_performance: string | null
+          academic_year: string | null
+          address: string | null
+          alternate_mobile: string | null
+          annual_income_range: string | null
+          area_city: string | null
+          assigned_teacher_id: string | null
+          class_applying_for: string | null
+          created_at: string | null
+          created_by: string
+          current_class: string | null
+          date_of_birth: string | null
+          education_board: string | null
+          email: string | null
+          father_education: string | null
+          father_name: string | null
+          father_occupation: string | null
+          gender: string | null
+          id: string
+          last_class_passed: string | null
+          medium_of_instruction: string | null
+          mother_education: string | null
+          mother_name: string | null
+          mother_occupation: string | null
+          next_followup_date: string | null
+          previous_school: string | null
+          primary_contact_person: string | null
+          primary_mobile: string
+          remarks: string | null
+          status: string
+          student_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          academic_performance?: string | null
+          academic_year?: string | null
+          address?: string | null
+          alternate_mobile?: string | null
+          annual_income_range?: string | null
+          area_city?: string | null
+          assigned_teacher_id?: string | null
+          class_applying_for?: string | null
+          created_at?: string | null
+          created_by: string
+          current_class?: string | null
+          date_of_birth?: string | null
+          education_board?: string | null
+          email?: string | null
+          father_education?: string | null
+          father_name?: string | null
+          father_occupation?: string | null
+          gender?: string | null
+          id?: string
+          last_class_passed?: string | null
+          medium_of_instruction?: string | null
+          mother_education?: string | null
+          mother_name?: string | null
+          mother_occupation?: string | null
+          next_followup_date?: string | null
+          previous_school?: string | null
+          primary_contact_person?: string | null
+          primary_mobile: string
+          remarks?: string | null
+          status?: string
+          student_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          academic_performance?: string | null
+          academic_year?: string | null
+          address?: string | null
+          alternate_mobile?: string | null
+          annual_income_range?: string | null
+          area_city?: string | null
+          assigned_teacher_id?: string | null
+          class_applying_for?: string | null
+          created_at?: string | null
+          created_by?: string
+          current_class?: string | null
+          date_of_birth?: string | null
+          education_board?: string | null
+          email?: string | null
+          father_education?: string | null
+          father_name?: string | null
+          father_occupation?: string | null
+          gender?: string | null
+          id?: string
+          last_class_passed?: string | null
+          medium_of_instruction?: string | null
+          mother_education?: string | null
+          mother_name?: string | null
+          mother_occupation?: string | null
+          next_followup_date?: string | null
+          previous_school?: string | null
+          primary_contact_person?: string | null
+          primary_mobile?: string
+          remarks?: string | null
+          status?: string
+          student_name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_assigned_teacher_id_fkey"
+            columns: ["assigned_teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leave_requests: {
         Row: {
           approved_by: string | null
