@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   Library,
   Award,
+  UserPlus,
 } from 'lucide-react';
 
 export const adminSidebarItems = [
@@ -24,6 +25,7 @@ export const adminSidebarItems = [
   { icon: <Calendar className="h-5 w-5" />, label: 'Timetable', path: '/admin/timetable' },
   { icon: <Clock className="h-5 w-5" />, label: 'Attendance', path: '/admin/attendance' },
   { icon: <FileText className="h-5 w-5" />, label: 'Exams', path: '/admin/exams' },
+  { icon: <UserPlus className="h-5 w-5" />, label: 'Leads', path: '/admin/leads' },
   { icon: <Bell className="h-5 w-5" />, label: 'Announcements', path: '/admin/announcements' },
   { icon: <Shield className="h-5 w-5" />, label: 'Leave Requests', path: '/admin/leave' },
   { icon: <Award className="h-5 w-5" />, label: 'Certificates', path: '/admin/certificates' },

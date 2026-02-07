@@ -24,6 +24,7 @@ import FeesManagement from "./pages/admin/FeesManagement";
 import CertificatesManagement from "./pages/admin/CertificatesManagement";
 import AdminMessages from "./pages/admin/AdminMessages";
 import SettingsPage from "./pages/admin/SettingsPage";
+import LeadsManagement from "./pages/admin/LeadsManagement";
 
 // Teacher Pages
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
@@ -37,6 +38,7 @@ import TeacherAnnouncements from "./pages/teacher/TeacherAnnouncements";
 import TeacherLeave from "./pages/teacher/TeacherLeave";
 import TeacherMessages from "./pages/teacher/TeacherMessages";
 import TeacherTimetable from "./pages/teacher/TeacherTimetable";
+import TeacherLeads from "./pages/teacher/TeacherLeads";
 // Parent Pages
 import ParentDashboard from "./pages/parent/ParentDashboard";
 import ParentChild from "./pages/parent/ParentChild";
@@ -79,6 +81,7 @@ const App = () => (
             <Route path="/admin/fees" element={<FeesManagement />} />
             <Route path="/admin/certificates" element={<CertificatesManagement />} />
             <Route path="/admin/messages" element={<AdminMessages />} />
+            <Route path="/admin/leads" element={<LeadsManagement />} />
             <Route path="/admin/settings" element={<SettingsPage />} />
             
             {/* Teacher Routes */}
@@ -92,6 +95,7 @@ const App = () => (
             <Route path="/teacher/announcements" element={<TeacherAnnouncements />} />
             <Route path="/teacher/leave" element={<TeacherLeave />} />
             <Route path="/teacher/timetable" element={<TeacherTimetable />} />
+            <Route path="/teacher/leads" element={<TeacherLeads />} />
             <Route path="/teacher/messages" element={<TeacherMessages />} />
             
             {/* Parent Routes */}
