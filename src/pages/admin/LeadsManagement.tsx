@@ -20,8 +20,9 @@ import { toast } from '@/hooks/use-toast';
 import {
   Plus, Search, Phone, Edit, Eye, Trash2, FileSpreadsheet,
   Calendar, MessageSquare, Download, BarChart3, Users, TrendingUp,
-  UserPlus, Filter, PieChart,
+  UserPlus, Filter, PieChart, Info,
 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RPieChart, Pie, Cell, Legend } from 'recharts';
@@ -50,6 +51,7 @@ export default function LeadsManagement() {
   const [callLogs, setCallLogs] = useState<any[]>([]);
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('leads');
+  const [moduleEnabled, setModuleEnabled] = useState<boolean | null>(null);
 
   const fetchLeads = async () => {
     setLoading(true);
@@ -83,7 +85,16 @@ export default function LeadsManagement() {
     }
   };
 
-  useEffect(() => { fetchLeads(); fetchTeachers(); }, []);
+  const fetchModuleStatus = async () => {
+    const { data } = await supabase
+      .from('app_settings')
+      .select('setting_value')
+      .eq('setting_key', 'leads_module_enabled')
+      .maybeSingle();
+    setModuleEnabled(data?.setting_value === true);
+  };
+
+  useEffect(() => { fetchLeads(); fetchTeachers(); fetchModuleStatus(); }, []);
 
   const filteredLeads = leads.filter(lead => {
     const matchesSearch = !searchQuery ||
@@ -203,6 +214,15 @@ export default function LeadsManagement() {
   return (
     <DashboardLayout sidebarItems={adminSidebarItems} roleColor="admin">
       <div className="space-y-6 animate-fade-in">
+        {moduleEnabled === false && (
+          <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
+            <Info className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800 dark:text-amber-200">
+              The Leads module is currently <strong>disabled</strong> for teachers. Teachers cannot see or manage leads.
+              You (Admin) still have full access. Enable it from <a href="/admin/settings" className="underline font-medium">Settings</a>.
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold">Leads Management</h1>

@@ -238,7 +238,9 @@ export default function LeadsSettings() {
             <div>
               <p className="font-medium">Enable Leads Module for Teachers</p>
               <p className="text-sm text-muted-foreground">
-                When OFF, the Leads button is completely hidden from all teacher panels
+                When OFF, the Leads button is completely hidden from all teacher panels.
+                <br />
+                <span className="text-xs font-medium text-primary">Admin access to Leads Management is always available regardless of this setting.</span>
               </p>
             </div>
             <Switch
