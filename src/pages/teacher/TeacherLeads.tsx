@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useLeadPermissions } from '@/hooks/useLeadPermissions';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { teacherSidebarItems } from '@/config/teacherSidebar';
+import { getTeacherSidebarItems } from '@/config/teacherSidebar';
 import LeadEntryForm from '@/components/leads/LeadEntryForm';
 import LeadCallLogDialog from '@/components/leads/LeadCallLogDialog';
 import LeadExcelImport from '@/components/leads/LeadExcelImport';
@@ -24,6 +26,9 @@ import { format } from 'date-fns';
 
 export default function TeacherLeads() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { hasAccess, loading: permLoading } = useLeadPermissions();
+  const sidebarItems = getTeacherSidebarItems(hasAccess);
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,6 +44,12 @@ export default function TeacherLeads() {
   const [callLogs, setCallLogs] = useState<any[]>([]);
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
 
+  // Redirect if no access
+  useEffect(() => {
+    if (!permLoading && !hasAccess) {
+      navigate('/teacher');
+    }
+  }, [permLoading, hasAccess, navigate]);
   const fetchLeads = async () => {
     if (!user) return;
     setLoading(true);
@@ -108,8 +119,18 @@ export default function TeacherLeads() {
     setStatusHistory(history || []);
   };
 
+  if (permLoading) {
+    return (
+      <DashboardLayout sidebarItems={sidebarItems} roleColor="teacher">
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
-    <DashboardLayout sidebarItems={teacherSidebarItems} roleColor="teacher">
+    <DashboardLayout sidebarItems={sidebarItems} roleColor="teacher">
       <div className="space-y-6 animate-fade-in">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
