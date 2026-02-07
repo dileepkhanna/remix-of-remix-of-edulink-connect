@@ -57,7 +57,7 @@ import { BackButton } from '@/components/ui/back-button';
 
 const teacherSchema = z.object({
   fullName: z.string().min(2, 'Name is required').max(100),
-  email: z.string().email('Valid email required'),
+  email: z.string().email('Valid email required').optional().or(z.literal('')),
   phone: z.string().min(10, 'Valid phone required'),
   qualification: z.string().min(2, 'Qualification is required'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -225,6 +225,9 @@ export default function TeachersManagement() {
       }
     }
 
+    // Generate email if not provided
+    const teacherEmail = formData.email || `${formData.fullName.toLowerCase().replace(/\s+/g, '.')}.${Date.now()}@school.internal`;
+
     // Create user account via edge function (preserves admin session)
     const { data: sessionData } = await supabase.auth.getSession();
     const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`, {
@@ -234,7 +237,7 @@ export default function TeachersManagement() {
         'Authorization': `Bearer ${sessionData.session?.access_token}`,
       },
       body: JSON.stringify({
-        email: formData.email,
+        email: teacherEmail,
         password: formData.password,
         fullName: formData.fullName,
         role: 'teacher',
@@ -410,8 +413,8 @@ export default function TeachersManagement() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Email *</Label>
-                    <Input type="email" placeholder="Email address" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                    <Label>Email</Label>
+                    <Input type="email" placeholder="Email address (optional)" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
                     {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                   </div>
 
