@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save, School, Bell, Shield, UserPlus, Trash2, Key, AlertTriangle } from 'lucide-react';
+import LeadsSettings from '@/components/leads/LeadsSettings';
 import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
@@ -479,6 +480,9 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Leads Module Settings */}
+          <LeadsSettings />
 
           {/* Danger Zone */}
           <Card className="card-elevated border-destructive/50">

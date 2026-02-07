@@ -25,19 +25,8 @@ import {
 } from 'lucide-react';
 import { downloadTimetableAsCSV, downloadTimetableAsPDF } from '@/utils/timetableDownload';
 
-const teacherSidebarItems = [
-  { icon: <LayoutDashboard className="h-5 w-5" />, label: 'Dashboard', path: '/teacher' },
-  { icon: <GraduationCap className="h-5 w-5" />, label: 'My Classes', path: '/teacher/classes' },
-  { icon: <Users className="h-5 w-5" />, label: 'Students', path: '/teacher/students' },
-  { icon: <Clock className="h-5 w-5" />, label: 'Attendance', path: '/teacher/attendance' },
-  { icon: <Calendar className="h-5 w-5" />, label: 'Timetable', path: '/teacher/timetable' },
-  { icon: <BookOpen className="h-5 w-5" />, label: 'Homework', path: '/teacher/homework' },
-  { icon: <ClipboardList className="h-5 w-5" />, label: 'Exam Marks', path: '/teacher/exams' },
-  { icon: <ClipboardList className="h-5 w-5" />, label: 'Reports', path: '/teacher/reports' },
-  { icon: <Bell className="h-5 w-5" />, label: 'Announcements', path: '/teacher/announcements' },
-  { icon: <Calendar className="h-5 w-5" />, label: 'Leave Request', path: '/teacher/leave' },
-  { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', path: '/teacher/messages' },
-];
+// Sidebar items from shared config with permission check
+import { useTeacherSidebar } from '@/hooks/useTeacherSidebar';
 
 interface TimetableEntry {
   id: string;
@@ -60,6 +49,7 @@ interface ClassOption {
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export default function TeacherTimetable() {
+  const teacherSidebarItems = useTeacherSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [timetable, setTimetable] = useState<TimetableEntry[]>([]);

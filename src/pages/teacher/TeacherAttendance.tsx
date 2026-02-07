@@ -40,18 +40,8 @@ import { cn } from '@/lib/utils';
 import { downloadAttendanceCSV, downloadAttendancePDF } from '@/utils/attendanceDownload';
 import { BackButton } from '@/components/ui/back-button';
 
-const teacherSidebarItems = [
-  { icon: <LayoutDashboard className="h-5 w-5" />, label: 'Dashboard', path: '/teacher' },
-  { icon: <GraduationCap className="h-5 w-5" />, label: 'My Classes', path: '/teacher/classes' },
-  { icon: <Users className="h-5 w-5" />, label: 'Students', path: '/teacher/students' },
-  { icon: <Clock className="h-5 w-5" />, label: 'Attendance', path: '/teacher/attendance' },
-  { icon: <BookOpen className="h-5 w-5" />, label: 'Homework', path: '/teacher/homework' },
-  { icon: <FileText className="h-5 w-5" />, label: 'Exam Marks', path: '/teacher/exams' },
-  { icon: <ClipboardList className="h-5 w-5" />, label: 'Reports', path: '/teacher/reports' },
-  { icon: <Bell className="h-5 w-5" />, label: 'Announcements', path: '/teacher/announcements' },
-  { icon: <CalendarIcon className="h-5 w-5" />, label: 'Leave Request', path: '/teacher/leave' },
-  { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', path: '/teacher/messages' },
-];
+// Sidebar items from shared config with permission check
+import { useTeacherSidebar } from '@/hooks/useTeacherSidebar';
 
 interface Student {
   id: string;
@@ -72,6 +62,7 @@ interface ClassOption {
 }
 
 export default function TeacherAttendance() {
+  const teacherSidebarItems = useTeacherSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [classes, setClasses] = useState<ClassOption[]>([]);
