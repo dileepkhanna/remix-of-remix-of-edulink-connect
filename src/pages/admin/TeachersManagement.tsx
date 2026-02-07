@@ -84,6 +84,7 @@ interface ClassItem {
   id: string;
   name: string;
   section: string;
+  class_teacher_id?: string | null;
 }
 
 export default function TeachersManagement() {
@@ -120,6 +121,7 @@ export default function TeachersManagement() {
     subjects: '',
     status: '',
     newPassword: '',
+    classTeacherOf: '',
   });
 
   useEffect(() => {
@@ -308,6 +310,8 @@ export default function TeachersManagement() {
 
   const openEditDialog = (teacher: Teacher) => {
     setEditingTeacher(teacher);
+    // Find the class this teacher is class teacher of
+    const classTeacherClass = classes.find(c => c.class_teacher_id === teacher.id);
     setEditFormData({
       fullName: teacher.profiles?.full_name || '',
       phone: teacher.profiles?.phone || '',
@@ -315,6 +319,7 @@ export default function TeachersManagement() {
       subjects: teacher.subjects?.join(', ') || '',
       status: teacher.status || 'active',
       newPassword: '',
+      classTeacherOf: classTeacherClass?.id || '',
     });
     setEditDialogOpen(true);
   };
@@ -340,6 +345,14 @@ export default function TeachersManagement() {
         subjects,
         status: editFormData.status,
       }).eq('id', editingTeacher.id);
+
+      // Update class teacher assignment
+      // First, remove this teacher as class teacher from any class
+      await supabase.from('classes').update({ class_teacher_id: null }).eq('class_teacher_id', editingTeacher.id);
+      // Then assign to selected class if any
+      if (editFormData.classTeacherOf) {
+        await supabase.from('classes').update({ class_teacher_id: editingTeacher.id }).eq('id', editFormData.classTeacherOf);
+      }
 
       // Update password if provided (via edge function would be ideal, but for now we notify)
       if (editFormData.newPassword && editFormData.newPassword.length >= 6) {
@@ -632,6 +645,19 @@ export default function TeachersManagement() {
                     <SelectContent>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="col-span-2 space-y-2">
+                  <Label>Class Teacher Of</Label>
+                  <Select value={editFormData.classTeacherOf || "none"} onValueChange={(v) => setEditFormData({ ...editFormData, classTeacherOf: v === "none" ? "" : v })}>
+                    <SelectTrigger><SelectValue placeholder="Select class (optional)" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {classes.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.name} - {c.section}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
