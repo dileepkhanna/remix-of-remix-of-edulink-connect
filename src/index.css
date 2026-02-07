@@ -1,0 +1,284 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@layer base {
+  :root {
+    /* Smart_Educonnect - Fresh Teal Theme */
+    --background: 210 17% 98%;
+    --foreground: 180 30% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 180 30% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 180 30% 15%;
+
+    /* Primary - Deep Teal */
+    --primary: 180 47% 33%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary - Mint Green */
+    --secondary: 145 45% 51%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Muted */
+    --muted: 210 15% 93%;
+    --muted-foreground: 180 20% 40%;
+
+    /* Accent - Amber Gold */
+    --accent: 38 89% 65%;
+    --accent-foreground: 38 80% 20%;
+
+    /* Success - Mint Green */
+    --success: 145 45% 51%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning - Orange */
+    --warning: 27 96% 54%;
+    --warning-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders */
+    --border: 180 20% 85%;
+    --input: 180 20% 85%;
+    --ring: 180 47% 33%;
+
+    --radius: 0.75rem;
+
+    /* Sidebar - Deep Teal Dark */
+    --sidebar-background: 180 47% 20%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 145 45% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 180 47% 28%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 180 47% 28%;
+    --sidebar-ring: 145 45% 55%;
+
+    /* Role-specific colors */
+    --admin: 180 47% 33%;
+    --admin-foreground: 0 0% 100%;
+    --teacher: 145 45% 45%;
+    --teacher-foreground: 0 0% 100%;
+    --parent: 38 80% 50%;
+    --parent-foreground: 0 0% 100%;
+
+    /* Highlight - Amber */
+    --highlight: 38 89% 92%;
+    --highlight-foreground: 38 80% 25%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(180 47% 33%), hsl(180 50% 40%));
+    --gradient-admin: linear-gradient(135deg, hsl(180 47% 33%), hsl(180 40% 28%));
+    --gradient-teacher: linear-gradient(135deg, hsl(145 45% 45%), hsl(145 50% 55%));
+    --gradient-parent: linear-gradient(135deg, hsl(38 80% 50%), hsl(38 85% 60%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 17% 96%));
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-glow: 0 0 20px hsl(180 47% 33% / 0.15);
+  }
+
+  .dark {
+    --background: 180 30% 8%;
+    --foreground: 210 17% 95%;
+
+    --card: 180 25% 12%;
+    --card-foreground: 210 17% 95%;
+
+    --popover: 180 25% 12%;
+    --popover-foreground: 210 17% 95%;
+
+    --primary: 180 47% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 145 45% 40%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 180 20% 18%;
+    --muted-foreground: 180 15% 60%;
+
+    --accent: 38 80% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 210 17% 95%;
+
+    --border: 180 20% 22%;
+    --input: 180 20% 22%;
+    --ring: 180 47% 40%;
+
+    --sidebar-background: 180 30% 6%;
+    --sidebar-foreground: 210 17% 95%;
+    --sidebar-primary: 145 45% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 180 25% 15%;
+    --sidebar-accent-foreground: 210 17% 95%;
+    --sidebar-border: 180 25% 15%;
+    --sidebar-ring: 145 45% 45%;
+
+    --highlight: 38 70% 25%;
+    --highlight-foreground: 38 89% 85%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .card-elevated {
+    @apply bg-card rounded-xl border shadow-md hover:shadow-lg transition-all duration-300;
+  }
+
+  .card-stat {
+    @apply bg-card rounded-xl border p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1;
+  }
+
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .gradient-admin {
+    background: var(--gradient-admin);
+  }
+
+  .gradient-teacher {
+    background: var(--gradient-teacher);
+  }
+
+  .gradient-parent {
+    background: var(--gradient-parent);
+  }
+
+  .text-gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glow-effect {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .sidebar-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all duration-200;
+  }
+
+  .sidebar-item-active {
+    @apply bg-sidebar-accent text-sidebar-primary font-medium;
+  }
+
+  .btn-role-admin {
+    @apply text-white font-medium;
+    background: var(--gradient-admin);
+  }
+
+  .btn-role-teacher {
+    @apply text-white font-medium;
+    background: var(--gradient-teacher);
+  }
+
+  .btn-role-parent {
+    @apply text-white font-medium;
+    background: var(--gradient-parent);
+  }
+
+  .status-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .status-active {
+    @apply bg-success/10 text-success;
+  }
+
+  .status-inactive {
+    @apply bg-muted text-muted-foreground;
+  }
+
+  .status-pending {
+    @apply bg-warning/10 text-warning;
+  }
+
+  .status-approved {
+    @apply bg-success/10 text-success;
+  }
+
+  .status-rejected {
+    @apply bg-destructive/10 text-destructive;
+  }
+
+  .table-header {
+    @apply bg-muted/50 text-muted-foreground text-xs uppercase tracking-wider font-semibold;
+  }
+
+  .avatar-ring {
+    @apply ring-2 ring-primary/20 ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

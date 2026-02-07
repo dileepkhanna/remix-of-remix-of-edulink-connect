@@ -1,0 +1,248 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import DashboardLayout from '@/components/layouts/DashboardLayout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
+import {
+  Users,
+  GraduationCap,
+  BookOpen,
+  Calendar,
+  Bell,
+  FileText,
+  MessageSquare,
+  Clock,
+  LayoutDashboard,
+  Loader2,
+  ClipboardList,
+  Plus,
+  CalendarDays,
+} from 'lucide-react';
+
+const teacherSidebarItems = [
+  { icon: <LayoutDashboard className="h-5 w-5" />, label: 'Dashboard', path: '/teacher' },
+  { icon: <GraduationCap className="h-5 w-5" />, label: 'My Classes', path: '/teacher/classes' },
+  { icon: <Users className="h-5 w-5" />, label: 'Students', path: '/teacher/students' },
+  { icon: <Clock className="h-5 w-5" />, label: 'Attendance', path: '/teacher/attendance' },
+  { icon: <BookOpen className="h-5 w-5" />, label: 'Homework', path: '/teacher/homework' },
+  { icon: <FileText className="h-5 w-5" />, label: 'Exam Marks', path: '/teacher/exams' },
+  { icon: <ClipboardList className="h-5 w-5" />, label: 'Reports', path: '/teacher/reports' },
+  { icon: <Bell className="h-5 w-5" />, label: 'Announcements', path: '/teacher/announcements' },
+  { icon: <Calendar className="h-5 w-5" />, label: 'Leave Request', path: '/teacher/leave' },
+  { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', path: '/teacher/messages' },
+];
+
+interface LeaveRequest {
+  id: string;
+  from_date: string;
+  to_date: string;
+  reason: string;
+  status: string;
+  created_at: string;
+}
+
+export default function TeacherLeave() {
+  const { user, userRole, loading } = useAuth();
+  const navigate = useNavigate();
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [teacherId, setTeacherId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    from_date: format(new Date(), 'yyyy-MM-dd'),
+    to_date: format(new Date(), 'yyyy-MM-dd'),
+    reason: '',
+  });
+
+  useEffect(() => {
+    if (!loading && (!user || userRole !== 'teacher')) {
+      navigate('/auth');
+    }
+  }, [user, userRole, loading, navigate]);
+
+  useEffect(() => {
+    async function fetchData() {
+      if (!user) return;
+      
+      try {
+        const { data: teacher } = await supabase
+          .from('teachers')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (teacher) {
+          setTeacherId(teacher.id);
+          
+          const { data: leaveData } = await supabase
+            .from('leave_requests')
+            .select('*')
+            .eq('teacher_id', teacher.id)
+            .eq('request_type', 'teacher')
+            .order('created_at', { ascending: false });
+
+          if (leaveData) setLeaveRequests(leaveData);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoadingData(false);
+      }
+    }
+
+    fetchData();
+  }, [user]);
+
+  const handleSubmit = async () => {
+    if (!formData.from_date || !formData.to_date || !formData.reason) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('leave_requests').insert({
+        teacher_id: teacherId,
+        from_date: formData.from_date,
+        to_date: formData.to_date,
+        reason: formData.reason,
+        request_type: 'teacher',
+        status: 'pending',
+      });
+
+      if (error) throw error;
+
+      toast.success('Leave request submitted successfully');
+      setDialogOpen(false);
+      setFormData({ from_date: format(new Date(), 'yyyy-MM-dd'), to_date: format(new Date(), 'yyyy-MM-dd'), reason: '' });
+      
+      // Refresh
+      const { data: leaveData } = await supabase
+        .from('leave_requests')
+        .select('*')
+        .eq('teacher_id', teacherId)
+        .eq('request_type', 'teacher')
+        .order('created_at', { ascending: false });
+      if (leaveData) setLeaveRequests(leaveData);
+    } catch (error) {
+      console.error('Error submitting leave request:', error);
+      toast.error('Failed to submit leave request');
+    }
+  };
+
+  const statusColors = {
+    pending: 'bg-yellow-100 text-yellow-700',
+    approved: 'bg-green-100 text-green-700',
+    rejected: 'bg-red-100 text-red-700',
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <DashboardLayout sidebarItems={teacherSidebarItems} roleColor="teacher">
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-center justify-between">
+          <h1 className="font-display text-2xl font-bold">Leave Requests</h1>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Request Leave
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Request Leave</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>From Date</Label>
+                    <Input
+                      type="date"
+                      value={formData.from_date}
+                      onChange={(e) => setFormData({ ...formData, from_date: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>To Date</Label>
+                    <Input
+                      type="date"
+                      value={formData.to_date}
+                      onChange={(e) => setFormData({ ...formData, to_date: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label>Reason</Label>
+                  <Textarea
+                    value={formData.reason}
+                    onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                    placeholder="Reason for leave..."
+                    rows={4}
+                  />
+                </div>
+                <Button onClick={handleSubmit} className="w-full">
+                  Submit Request
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {loadingData ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : leaveRequests.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <CalendarDays className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">No leave requests yet.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {leaveRequests.map((leave) => (
+              <Card key={leave.id} className="card-elevated">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CalendarDays className="h-5 w-5 text-secondary" />
+                        <span className="font-semibold">
+                          {format(new Date(leave.from_date), 'PPP')} - {format(new Date(leave.to_date), 'PPP')}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusColors[leave.status as keyof typeof statusColors]}`}>
+                          {leave.status}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{leave.reason}</p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Submitted: {format(new Date(leave.created_at), 'PPP')}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+}
