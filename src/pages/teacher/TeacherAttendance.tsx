@@ -20,27 +20,25 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import {
   Users,
-  GraduationCap,
-  BookOpen,
   Calendar as CalendarIcon,
-  Bell,
-  FileText,
-  MessageSquare,
-  Clock,
-  LayoutDashboard,
   Loader2,
-  ClipboardList,
   Check,
   X,
   Save,
   Download,
   FileSpreadsheet,
+  FileText,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  TrendingUp,
+  Search,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { downloadAttendanceCSV, downloadAttendancePDF } from '@/utils/attendanceDownload';
 import { BackButton } from '@/components/ui/back-button';
-
-// Sidebar items from shared config with permission check
+import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import { useTeacherSidebar } from '@/hooks/useTeacherSidebar';
 
 interface Student {
@@ -48,11 +46,6 @@ interface Student {
   full_name: string;
   admission_number: string;
   photo_url: string | null;
-}
-
-interface AttendanceRecord {
-  student_id: string;
-  status: 'present' | 'absent' | 'late';
 }
 
 interface ClassOption {
@@ -73,6 +66,7 @@ export default function TeacherAttendance() {
   const [loadingData, setLoadingData] = useState(true);
   const [saving, setSaving] = useState(false);
   const [teacherId, setTeacherId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'teacher')) {
@@ -83,7 +77,7 @@ export default function TeacherAttendance() {
   useEffect(() => {
     async function fetchClasses() {
       if (!user) return;
-      
+
       try {
         const { data: teacher } = await supabase
           .from('teachers')
@@ -94,7 +88,6 @@ export default function TeacherAttendance() {
         if (teacher) {
           setTeacherId(teacher.id);
 
-          // Get classes from teacher_classes table
           const { data: teacherClasses } = await supabase
             .from('teacher_classes')
             .select('class_id')
@@ -102,15 +95,12 @@ export default function TeacherAttendance() {
 
           const teacherClassIds = teacherClasses?.map(tc => tc.class_id) || [];
 
-          // Also get classes where this teacher is the class_teacher
           const { data: classTeacherClasses } = await supabase
             .from('classes')
             .select('id')
             .eq('class_teacher_id', teacher.id);
 
           const classTeacherIds = classTeacherClasses?.map(c => c.id) || [];
-
-          // Combine and deduplicate class IDs
           const allClassIds = [...new Set([...teacherClassIds, ...classTeacherIds])];
 
           if (allClassIds.length > 0) {
@@ -140,7 +130,7 @@ export default function TeacherAttendance() {
   useEffect(() => {
     async function fetchStudentsAndAttendance() {
       if (!selectedClass) return;
-      
+
       setLoadingData(true);
       try {
         const { data: studentData } = await supabase
@@ -151,8 +141,7 @@ export default function TeacherAttendance() {
 
         if (studentData) {
           setStudents(studentData);
-          
-          // Fetch existing attendance for this date
+
           const dateStr = format(selectedDate, 'yyyy-MM-dd');
           const { data: attendanceData } = await supabase
             .from('attendance')
@@ -166,7 +155,6 @@ export default function TeacherAttendance() {
               attendanceMap[a.student_id] = a.status as 'present' | 'absent' | 'late';
             });
           }
-          // Set default to present for students without attendance
           studentData.forEach(s => {
             if (!attendanceMap[s.id]) {
               attendanceMap[s.id] = 'present';
@@ -184,29 +172,29 @@ export default function TeacherAttendance() {
     fetchStudentsAndAttendance();
   }, [selectedClass, selectedDate]);
 
-  const toggleAttendance = (studentId: string) => {
-    setAttendance(prev => {
-      const current = prev[studentId] || 'present';
-      const next = current === 'present' ? 'absent' : current === 'absent' ? 'late' : 'present';
-      return { ...prev, [studentId]: next };
-    });
+  const setStatus = (studentId: string, status: 'present' | 'absent' | 'late') => {
+    setAttendance(prev => ({ ...prev, [studentId]: status }));
+  };
+
+  const markAllAs = (status: 'present' | 'absent' | 'late') => {
+    const newAttendance: Record<string, 'present' | 'absent' | 'late'> = {};
+    students.forEach(s => { newAttendance[s.id] = status; });
+    setAttendance(newAttendance);
   };
 
   const saveAttendance = async () => {
     if (!teacherId) return;
-    
+
     setSaving(true);
     try {
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
-      
-      // Delete existing attendance for this date and these students
+
       await supabase
         .from('attendance')
         .delete()
         .in('student_id', students.map(s => s.id))
         .eq('date', dateStr);
 
-      // Insert new attendance records
       const records = students.map(student => ({
         student_id: student.id,
         date: dateStr,
@@ -215,7 +203,7 @@ export default function TeacherAttendance() {
       }));
 
       const { error } = await supabase.from('attendance').insert(records);
-      
+
       if (error) throw error;
       toast.success('Attendance saved successfully');
     } catch (error) {
@@ -237,167 +225,291 @@ export default function TeacherAttendance() {
   const presentCount = Object.values(attendance).filter(s => s === 'present').length;
   const absentCount = Object.values(attendance).filter(s => s === 'absent').length;
   const lateCount = Object.values(attendance).filter(s => s === 'late').length;
+  const totalStudents = students.length;
+  const attendanceRate = totalStudents > 0 ? Math.round(((presentCount + lateCount) / totalStudents) * 100) : 0;
+
+  const filteredStudents = searchQuery
+    ? students.filter(s =>
+        s.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.admission_number.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : students;
+
+  const handleExportCSV = () => {
+    const currentClass = classes.find(c => c.id === selectedClass);
+    const className = currentClass ? `${currentClass.name}-${currentClass.section}` : 'Class';
+    const records = students.map(student => ({
+      studentName: student.full_name,
+      admissionNumber: student.admission_number,
+      className: className,
+      date: format(selectedDate, 'MMM d, yyyy'),
+      status: attendance[student.id] || 'present',
+    }));
+    downloadAttendanceCSV(records, `attendance-${className}-${format(selectedDate, 'yyyy-MM-dd')}`);
+    toast.success('CSV file downloaded');
+  };
+
+  const handleExportPDF = () => {
+    const currentClass = classes.find(c => c.id === selectedClass);
+    const className = currentClass ? `${currentClass.name}-${currentClass.section}` : 'Class';
+    const records = students.map(student => ({
+      studentName: student.full_name,
+      admissionNumber: student.admission_number,
+      className: className,
+      date: format(selectedDate, 'MMM d, yyyy'),
+      status: attendance[student.id] || 'present',
+    }));
+    downloadAttendancePDF(records, `Attendance Report - ${className}`, format(selectedDate, 'MMMM d, yyyy'));
+    toast.success('Print window opened');
+  };
 
   return (
     <DashboardLayout sidebarItems={teacherSidebarItems} roleColor="teacher">
       <div className="space-y-6 animate-fade-in">
         <BackButton to="/teacher" />
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h1 className="font-display text-2xl font-bold">Attendance</h1>
-          <div className="flex flex-wrap gap-3">
-            <Select value={selectedClass} onValueChange={setSelectedClass}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select Class" />
-              </SelectTrigger>
-              <SelectContent>
-                {classes.map((cls) => (
-                  <SelectItem key={cls.id} value={cls.id}>
-                    {cls.name} - {cls.section}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[180px] justify-start text-left font-normal">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {format(selectedDate, 'PPP')}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+
+        {/* Header */}
+        <div className="flex flex-col gap-1">
+          <h1 className="font-display text-2xl font-bold">Mark Attendance</h1>
+          <p className="text-muted-foreground text-sm">Select a class and date, then mark each student's status</p>
         </div>
 
+        {/* Controls Bar */}
+        <Card className="card-elevated">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <Select value={selectedClass} onValueChange={setSelectedClass}>
+                <SelectTrigger className="sm:w-[200px]">
+                  <SelectValue placeholder="Select Class" />
+                </SelectTrigger>
+                <SelectContent>
+                  {classes.map((cls) => (
+                    <SelectItem key={cls.id} value={cls.id}>
+                      {cls.name} - {cls.section}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="sm:w-[200px] justify-start text-left font-normal">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(selectedDate, 'PPP')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => date && setSelectedDate(date)}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <div className="relative flex-1 min-w-[180px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search student..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4">
-          <Card className="bg-green-50 dark:bg-green-950/30 border-green-200">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-green-600">{presentCount}</p>
-              <p className="text-sm text-green-600">Present</p>
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <Card className="card-elevated col-span-2 lg:col-span-1">
+            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
+              <p className="text-2xl font-bold text-primary">{attendanceRate}%</p>
+              <p className="text-xs text-muted-foreground font-medium">Rate</p>
+              <Progress value={attendanceRate} className="h-1.5 w-full mt-1" />
             </CardContent>
           </Card>
-          <Card className="bg-red-50 dark:bg-red-950/30 border-red-200">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-red-600">{absentCount}</p>
-              <p className="text-sm text-red-600">Absent</p>
+          <Card className="card-elevated">
+            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
+              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                <Users className="h-5 w-5 text-foreground" />
+              </div>
+              <p className="text-2xl font-bold">{totalStudents}</p>
+              <p className="text-xs text-muted-foreground font-medium">Total</p>
             </CardContent>
           </Card>
-          <Card className="bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-yellow-600">{lateCount}</p>
-              <p className="text-sm text-yellow-600">Late</p>
+          <Card className="card-elevated">
+            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
+              <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
+                <CheckCircle2 className="h-5 w-5 text-success" />
+              </div>
+              <p className="text-2xl font-bold text-success">{presentCount}</p>
+              <p className="text-xs text-muted-foreground font-medium">Present</p>
+            </CardContent>
+          </Card>
+          <Card className="card-elevated">
+            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
+              <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                <XCircle className="h-5 w-5 text-destructive" />
+              </div>
+              <p className="text-2xl font-bold text-destructive">{absentCount}</p>
+              <p className="text-xs text-muted-foreground font-medium">Absent</p>
+            </CardContent>
+          </Card>
+          <Card className="card-elevated">
+            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
+              <div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center">
+                <Clock className="h-5 w-5 text-warning" />
+              </div>
+              <p className="text-2xl font-bold text-warning">{lateCount}</p>
+              <p className="text-xs text-muted-foreground font-medium">Late</p>
             </CardContent>
           </Card>
         </div>
 
         {loadingData ? (
-          <div className="flex justify-center py-12">
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Loading students...</p>
           </div>
         ) : students.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No students in this class.</p>
+          <Card className="card-elevated">
+            <CardContent className="py-16 text-center space-y-3">
+              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto">
+                <Users className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground">No students found</p>
+                <p className="text-sm text-muted-foreground mt-1">No students are enrolled in this class yet.</p>
+              </div>
             </CardContent>
           </Card>
         ) : (
           <>
-            <Card>
-              <CardContent className="p-4">
-                <div className="space-y-2">
-                  {students.map((student) => (
+            {/* Quick Actions */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground mr-1">Quick mark all:</span>
+              <Button size="sm" variant="outline" className="gap-1.5 text-success border-success/30 hover:bg-success/10" onClick={() => markAllAs('present')}>
+                <Check className="h-3.5 w-3.5" /> All Present
+              </Button>
+              <Button size="sm" variant="outline" className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => markAllAs('absent')}>
+                <X className="h-3.5 w-3.5" /> All Absent
+              </Button>
+              <Button size="sm" variant="outline" className="gap-1.5 text-warning border-warning/30 hover:bg-warning/10" onClick={() => markAllAs('late')}>
+                <Clock className="h-3.5 w-3.5" /> All Late
+              </Button>
+            </div>
+
+            {/* Student List */}
+            <Card className="card-elevated">
+              <CardHeader className="pb-2">
+                <CardTitle className="font-display text-lg flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  Students
+                  <Badge variant="secondary" className="ml-1 text-xs">{filteredStudents.length}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-3">
+                <div className="space-y-1.5">
+                  {filteredStudents.map((student, idx) => (
                     <div
                       key={student.id}
-                      className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                      className={cn(
+                        "flex items-center justify-between p-3 rounded-xl transition-all duration-200",
+                        "hover:bg-muted/40",
+                        idx % 2 === 0 ? "bg-muted/10" : ""
+                      )}
                     >
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Avatar className="h-10 w-10 shrink-0">
                           <AvatarImage src={student.photo_url || ''} />
-                          <AvatarFallback className="gradient-teacher text-white">
+                          <AvatarFallback className="gradient-teacher text-white text-xs font-semibold">
                             {student.full_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
-                          <p className="font-medium">{student.full_name}</p>
-                          <p className="text-sm text-muted-foreground">{student.admission_number}</p>
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm truncate">{student.full_name}</p>
+                          <p className="text-xs text-muted-foreground">{student.admission_number}</p>
                         </div>
                       </div>
-                      <button
-                        onClick={() => toggleAttendance(student.id)}
-                        className={cn(
-                          "px-4 py-2 rounded-lg font-medium transition-all",
-                          attendance[student.id] === 'present' && "bg-green-100 text-green-700 dark:bg-green-900/30",
-                          attendance[student.id] === 'absent' && "bg-red-100 text-red-700 dark:bg-red-900/30",
-                          attendance[student.id] === 'late' && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30"
-                        )}
-                      >
-                        {attendance[student.id] === 'present' && <Check className="inline h-4 w-4 mr-1" />}
-                        {attendance[student.id] === 'absent' && <X className="inline h-4 w-4 mr-1" />}
-                        {attendance[student.id] === 'late' && <Clock className="inline h-4 w-4 mr-1" />}
-                        {attendance[student.id]?.charAt(0).toUpperCase() + attendance[student.id]?.slice(1)}
-                      </button>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          onClick={() => setStatus(student.id, 'present')}
+                          className={cn(
+                            "flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border",
+                            attendance[student.id] === 'present'
+                              ? "bg-success/15 text-success border-success/30 shadow-sm"
+                              : "bg-background text-muted-foreground border-border hover:bg-success/5 hover:text-success hover:border-success/20"
+                          )}
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">Present</span>
+                        </button>
+                        <button
+                          onClick={() => setStatus(student.id, 'absent')}
+                          className={cn(
+                            "flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border",
+                            attendance[student.id] === 'absent'
+                              ? "bg-destructive/15 text-destructive border-destructive/30 shadow-sm"
+                              : "bg-background text-muted-foreground border-border hover:bg-destructive/5 hover:text-destructive hover:border-destructive/20"
+                          )}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">Absent</span>
+                        </button>
+                        <button
+                          onClick={() => setStatus(student.id, 'late')}
+                          className={cn(
+                            "flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border",
+                            attendance[student.id] === 'late'
+                              ? "bg-warning/15 text-warning border-warning/30 shadow-sm"
+                              : "bg-background text-muted-foreground border-border hover:bg-warning/5 hover:text-warning hover:border-warning/20"
+                          )}
+                        >
+                          <Clock className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">Late</span>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
 
-            <div className="flex justify-end gap-3">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" disabled={students.length === 0}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => {
-                    const currentClass = classes.find(c => c.id === selectedClass);
-                    const className = currentClass ? `${currentClass.name}-${currentClass.section}` : 'Class';
-                    const records = students.map(student => ({
-                      studentName: student.full_name,
-                      admissionNumber: student.admission_number,
-                      className: className,
-                      date: format(selectedDate, 'MMM d, yyyy'),
-                      status: attendance[student.id] || 'present',
-                    }));
-                    downloadAttendanceCSV(records, `attendance-${className}-${format(selectedDate, 'yyyy-MM-dd')}`);
-                    toast.success('CSV file downloaded');
-                  }}>
-                    <FileSpreadsheet className="h-4 w-4 mr-2" />
-                    Download CSV
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => {
-                    const currentClass = classes.find(c => c.id === selectedClass);
-                    const className = currentClass ? `${currentClass.name}-${currentClass.section}` : 'Class';
-                    const records = students.map(student => ({
-                      studentName: student.full_name,
-                      admissionNumber: student.admission_number,
-                      className: className,
-                      date: format(selectedDate, 'MMM d, yyyy'),
-                      status: attendance[student.id] || 'present',
-                    }));
-                    downloadAttendancePDF(records, `Attendance Report - ${className}`, format(selectedDate, 'MMMM d, yyyy'));
-                    toast.success('Print window opened');
-                  }}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    Print / Save as PDF
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button onClick={saveAttendance} disabled={saving} size="lg">
-                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                Save Attendance
-              </Button>
+            {/* Bottom Action Bar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 rounded-xl bg-card border shadow-sm sticky bottom-4">
+              <div className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">{totalStudents}</span> students &middot;{' '}
+                <span className="text-success font-medium">{presentCount}</span> present &middot;{' '}
+                <span className="text-destructive font-medium">{absentCount}</span> absent &middot;{' '}
+                <span className="text-warning font-medium">{lateCount}</span> late
+              </div>
+              <div className="flex items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" disabled={students.length === 0}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Export
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleExportCSV}>
+                      <FileSpreadsheet className="h-4 w-4 mr-2" />
+                      Download CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleExportPDF}>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Print / Save as PDF
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button onClick={saveAttendance} disabled={saving} className="gap-2">
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  Save Attendance
+                </Button>
+              </div>
             </div>
           </>
         )}
