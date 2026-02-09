@@ -5,11 +5,12 @@ import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Calendar, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Loader2, Calendar, CheckCircle2, XCircle, Clock, TrendingUp, Users } from 'lucide-react';
 import { parentSidebarItems } from '@/config/parentSidebar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format, subDays } from 'date-fns';
 import { BackButton } from '@/components/ui/back-button';
+import { Progress } from '@/components/ui/progress';
 
 interface AttendanceRecord {
   id: string;
@@ -70,24 +71,28 @@ export default function ParentAttendance() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'present': return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      case 'absent': return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'late': return <Clock className="h-4 w-4 text-yellow-500" />;
+      case 'present': return <CheckCircle2 className="h-4 w-4 text-success" />;
+      case 'absent': return <XCircle className="h-4 w-4 text-destructive" />;
+      case 'late': return <Clock className="h-4 w-4 text-warning" />;
       default: return null;
     }
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, string> = {
-      present: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-      absent: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-      late: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-    };
-    return <Badge className={variants[status] || ''}>{status}</Badge>;
+    switch (status) {
+      case 'present': return <Badge className="bg-success/10 text-success border-success/20 gap-1"><CheckCircle2 className="h-3 w-3" /> Present</Badge>;
+      case 'absent': return <Badge className="bg-destructive/10 text-destructive border-destructive/20 gap-1"><XCircle className="h-3 w-3" /> Absent</Badge>;
+      case 'late': return <Badge className="bg-warning/10 text-warning border-warning/20 gap-1"><Clock className="h-3 w-3" /> Late</Badge>;
+      default: return <Badge variant="outline">{status}</Badge>;
+    }
   };
 
   if (loading || loadingData) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   const stats = {
@@ -95,78 +100,121 @@ export default function ParentAttendance() {
     absent: attendance.filter(a => a.status === 'absent').length,
     late: attendance.filter(a => a.status === 'late').length,
   };
-  const percentage = attendance.length > 0 ? Math.round((stats.present / attendance.length) * 100) : 0;
+  const total = attendance.length;
+  const percentage = total > 0 ? Math.round(((stats.present + stats.late) / total) * 100) : 0;
 
   return (
     <DashboardLayout sidebarItems={parentSidebarItems} roleColor="parent">
       <div className="space-y-6 animate-fade-in">
         <BackButton to="/parent" />
-        <div>
+
+        {/* Header */}
+        <div className="flex flex-col gap-1">
           <h1 className="font-display text-2xl font-bold">Attendance</h1>
-          <p className="text-muted-foreground">{childName}'s attendance record (Last 30 days)</p>
+          <p className="text-muted-foreground text-sm">{childName}'s attendance record — Last 30 days</p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="card-elevated">
-            <CardContent className="pt-6 text-center">
-              <p className="text-3xl font-bold text-primary">{percentage}%</p>
-              <p className="text-sm text-muted-foreground">Attendance</p>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <Card className="card-elevated col-span-2 lg:col-span-1">
+            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
+              <p className="text-2xl font-bold text-primary">{percentage}%</p>
+              <p className="text-xs text-muted-foreground font-medium">Attendance Rate</p>
+              <Progress value={percentage} className="h-1.5 w-full mt-1" />
             </CardContent>
           </Card>
           <Card className="card-elevated">
-            <CardContent className="pt-6 text-center">
-              <p className="text-3xl font-bold text-green-500">{stats.present}</p>
-              <p className="text-sm text-muted-foreground">Present</p>
+            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
+              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                <Users className="h-5 w-5 text-foreground" />
+              </div>
+              <p className="text-2xl font-bold">{total}</p>
+              <p className="text-xs text-muted-foreground font-medium">Total Days</p>
             </CardContent>
           </Card>
           <Card className="card-elevated">
-            <CardContent className="pt-6 text-center">
-              <p className="text-3xl font-bold text-red-500">{stats.absent}</p>
-              <p className="text-sm text-muted-foreground">Absent</p>
+            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
+              <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
+                <CheckCircle2 className="h-5 w-5 text-success" />
+              </div>
+              <p className="text-2xl font-bold text-success">{stats.present}</p>
+              <p className="text-xs text-muted-foreground font-medium">Present</p>
             </CardContent>
           </Card>
           <Card className="card-elevated">
-            <CardContent className="pt-6 text-center">
-              <p className="text-3xl font-bold text-yellow-500">{stats.late}</p>
-              <p className="text-sm text-muted-foreground">Late</p>
+            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
+              <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                <XCircle className="h-5 w-5 text-destructive" />
+              </div>
+              <p className="text-2xl font-bold text-destructive">{stats.absent}</p>
+              <p className="text-xs text-muted-foreground font-medium">Absent</p>
+            </CardContent>
+          </Card>
+          <Card className="card-elevated">
+            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
+              <div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center">
+                <Clock className="h-5 w-5 text-warning" />
+              </div>
+              <p className="text-2xl font-bold text-warning">{stats.late}</p>
+              <p className="text-xs text-muted-foreground font-medium">Late</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Attendance Table */}
         <Card className="card-elevated">
-          <CardHeader>
-            <CardTitle className="font-display flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
+          <CardHeader className="pb-3">
+            <CardTitle className="font-display text-lg flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
               Attendance History
+              <Badge variant="secondary" className="ml-1 text-xs">{total} days</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {attendance.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground">No attendance records found.</p>
+              <div className="text-center py-16 space-y-3">
+                <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto">
+                  <Calendar className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">No records yet</p>
+                  <p className="text-sm text-muted-foreground mt-1">Attendance records will appear here.</p>
+                </div>
+              </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Reason</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {attendance.map((record) => (
-                    <TableRow key={record.id}>
-                      <TableCell className="flex items-center gap-2">
-                        {getStatusIcon(record.status)}
-                        {new Date(record.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(record.status)}</TableCell>
-                      <TableCell className="text-muted-foreground">{record.reason || '-'}</TableCell>
+              <div className="overflow-x-auto rounded-lg border">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30">
+                      <TableHead className="font-semibold">Date</TableHead>
+                      <TableHead className="font-semibold">Day</TableHead>
+                      <TableHead className="font-semibold">Status</TableHead>
+                      <TableHead className="font-semibold">Reason</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {attendance.map((record) => {
+                      const date = new Date(record.date);
+                      return (
+                        <TableRow key={record.id} className="hover:bg-muted/20 transition-colors">
+                          <TableCell className="flex items-center gap-2 font-medium">
+                            {getStatusIcon(record.status)}
+                            {format(date, 'MMM d, yyyy')}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {format(date, 'EEEE')}
+                          </TableCell>
+                          <TableCell>{getStatusBadge(record.status)}</TableCell>
+                          <TableCell className="text-muted-foreground text-sm">{record.reason || '—'}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
