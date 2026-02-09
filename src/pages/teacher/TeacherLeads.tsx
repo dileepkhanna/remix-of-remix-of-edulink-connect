@@ -207,7 +207,42 @@ export default function TeacherLeads() {
                           </a>
                         </TableCell>
                         <TableCell>{lead.father_name || '—'}</TableCell>
-                        <TableCell><LeadStatusBadge status={lead.status} /></TableCell>
+                        <TableCell>
+                          <Select
+                            value={lead.status}
+                            onValueChange={async (value) => {
+                              if (value === lead.status || !user) return;
+                              try {
+                                await supabase.from('lead_status_history').insert({
+                                  lead_id: lead.id,
+                                  old_status: lead.status,
+                                  new_status: value,
+                                  changed_by: user.id,
+                                } as any);
+                                await supabase
+                                  .from('leads')
+                                  .update({ status: value } as any)
+                                  .eq('id', lead.id);
+                                toast({ title: 'Status updated' });
+                                fetchLeads();
+                              } catch (error: any) {
+                                toast({ title: 'Error', description: error.message, variant: 'destructive' });
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="h-8 w-[180px] text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {LEAD_STATUSES.map(s => (
+                                <SelectItem key={s.value} value={s.value}>
+                                  <span className={`inline-block w-2 h-2 rounded-full mr-2 ${s.color.split(' ')[0]}`} />
+                                  {s.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
                         <TableCell>
                           {lead.next_followup_date ? format(new Date(lead.next_followup_date), 'dd MMM yyyy') : '—'}
                         </TableCell>
