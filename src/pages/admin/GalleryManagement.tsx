@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Loader2, Plus, FolderOpen, Trash2, Edit, ImageIcon, X, ZoomIn } from 'lucide-react';
+import { Loader2, Plus, FolderOpen, Trash2, Edit, ImageIcon, X, ZoomIn, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface GalleryFolder {
@@ -232,22 +232,37 @@ export default function GalleryManagement() {
       {/* Image Preview Dialog */}
       <Dialog open={!!previewImage} onOpenChange={() => setPreviewImage(null)}>
         <DialogContent className="max-w-3xl p-0 overflow-hidden">
-          {previewImage && (
-            <div className="relative">
-              <img src={previewImage.image_url} alt={previewImage.caption || ''} className="w-full max-h-[80vh] object-contain bg-black" />
-              <div className="p-3 flex items-center justify-between">
-                <p className="text-sm">{previewImage.caption || 'No caption'}</p>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="sm" onClick={() => { setEditingImage(previewImage); setEditCaption(previewImage.caption || ''); setPreviewImage(null); }}>
-                    <Edit className="h-3 w-3 mr-1" /> Edit
+          {previewImage && (() => {
+            const currentIndex = images.findIndex(i => i.id === previewImage.id);
+            const hasPrev = currentIndex > 0;
+            const hasNext = currentIndex < images.length - 1;
+            return (
+              <div className="relative">
+                <img src={previewImage.image_url} alt={previewImage.caption || ''} className="w-full max-h-[80vh] object-contain bg-black" />
+                {hasPrev && (
+                  <Button variant="ghost" size="icon" className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full h-10 w-10" onClick={() => setPreviewImage(images[currentIndex - 1])}>
+                    <ChevronLeft className="h-6 w-6" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => { handleDeleteImage(previewImage); setPreviewImage(null); }}>
-                    <Trash2 className="h-3 w-3 mr-1" /> Delete
+                )}
+                {hasNext && (
+                  <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full h-10 w-10" onClick={() => setPreviewImage(images[currentIndex + 1])}>
+                    <ChevronRight className="h-6 w-6" />
                   </Button>
+                )}
+                <div className="p-3 flex items-center justify-between">
+                  <p className="text-sm">{previewImage.caption || 'No caption'} <span className="text-muted-foreground text-xs ml-1">{currentIndex + 1}/{images.length}</span></p>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => { setEditingImage(previewImage); setEditCaption(previewImage.caption || ''); setPreviewImage(null); }}>
+                      <Edit className="h-3 w-3 mr-1" /> Edit
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => { handleDeleteImage(previewImage); setPreviewImage(null); }}>
+                      <Trash2 className="h-3 w-3 mr-1" /> Delete
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
