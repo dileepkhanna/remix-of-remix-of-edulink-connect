@@ -64,6 +64,32 @@ export default function ParentAttendance() {
     if (studentId) fetchAttendance(new Date());
   }, [studentId]);
 
+  // Realtime subscription — parent sees updates instantly when teacher marks attendance
+  useEffect(() => {
+    if (!studentId) return;
+
+    const channel = supabase
+      .channel('parent-attendance-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'attendance',
+          filter: `student_id=eq.${studentId}`,
+        },
+        (payload) => {
+          // Re-fetch attendance data on any change
+          fetchAttendance(new Date());
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [studentId]);
+
   const fetchAttendance = async (month: Date) => {
     if (!studentId) return;
     setLoadingData(true);
