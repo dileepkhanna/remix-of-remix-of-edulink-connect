@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,12 +29,13 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Calendar, Download, Users, CheckCircle2, XCircle, Clock, FileText, FileSpreadsheet, TrendingUp, Search } from 'lucide-react';
+import { Loader2, Download, Users, CheckCircle2, XCircle, Clock, FileText, FileSpreadsheet, TrendingUp, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { downloadAttendanceCSV, downloadAttendancePDF } from '@/utils/attendanceDownload';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameDay, isToday } from 'date-fns';
 import { BackButton } from '@/components/ui/back-button';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 interface AttendanceRecord {
   id: string;
@@ -54,13 +55,10 @@ export default function AttendanceManagement() {
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [classes, setClasses] = useState<{ id: string; name: string; section: string }[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>('all');
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [dateFrom, setDateFrom] = useState<string>('');
-  const [dateTo, setDateTo] = useState<string>('');
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [loadingData, setLoadingData] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-
-  const [stats, setStats] = useState({ total: 0, present: 0, absent: 0, late: 0 });
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'admin')) {
@@ -68,37 +66,28 @@ export default function AttendanceManagement() {
     }
   }, [user, userRole, loading, navigate]);
 
-  useEffect(() => {
-    fetchClasses();
-  }, []);
+  useEffect(() => { fetchClasses(); }, []);
 
   useEffect(() => {
-    fetchAttendance();
-  }, [selectedClass, selectedDate, dateFrom, dateTo]);
+    fetchMonthAttendance();
+  }, [selectedClass, currentMonth]);
 
   const fetchClasses = async () => {
     const { data } = await supabase.from('classes').select('*').order('name');
     if (data) setClasses(data);
   };
 
-  const fetchAttendance = async () => {
+  const fetchMonthAttendance = async () => {
     setLoadingData(true);
+    const monthStart = format(startOfMonth(currentMonth), 'yyyy-MM-dd');
+    const monthEnd = format(endOfMonth(currentMonth), 'yyyy-MM-dd');
 
     let query = supabase
       .from('attendance')
       .select('*, students(full_name, admission_number, class_id, classes(name, section))')
+      .gte('date', monthStart)
+      .lte('date', monthEnd)
       .order('created_at', { ascending: false });
-
-    // Support date range or single date
-    if (dateFrom && dateTo) {
-      query = query.gte('date', dateFrom).lte('date', dateTo);
-    } else if (dateFrom) {
-      query = query.gte('date', dateFrom);
-    } else if (dateTo) {
-      query = query.lte('date', dateTo);
-    } else {
-      query = query.eq('date', selectedDate);
-    }
 
     const { data } = await query;
 
@@ -108,14 +97,52 @@ export default function AttendanceManagement() {
     }
 
     setAttendance(filtered as AttendanceRecord[]);
-
-    const present = filtered.filter(a => a.status === 'present').length;
-    const absent = filtered.filter(a => a.status === 'absent').length;
-    const late = filtered.filter(a => a.status === 'late').length;
-    setStats({ total: filtered.length, present, absent, late });
-
     setLoadingData(false);
   };
+
+  // Calendar data
+  const monthDays = useMemo(() => {
+    return eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) });
+  }, [currentMonth]);
+
+  const firstDayOffset = getDay(startOfMonth(currentMonth));
+
+  const daySummaryMap = useMemo(() => {
+    const map = new Map<string, { present: number; absent: number; late: number; total: number }>();
+    attendance.forEach(a => {
+      const existing = map.get(a.date) || { present: 0, absent: 0, late: 0, total: 0 };
+      existing.total++;
+      if (a.status === 'present') existing.present++;
+      else if (a.status === 'absent') existing.absent++;
+      else if (a.status === 'late') existing.late++;
+      map.set(a.date, existing);
+    });
+    return map;
+  }, [attendance]);
+
+  const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+  const dayRecords = useMemo(() => {
+    let records = attendance.filter(a => a.date === selectedDateStr);
+    if (searchQuery) {
+      records = records.filter(a =>
+        a.students?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        a.students?.admission_number?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    return records;
+  }, [attendance, selectedDateStr, searchQuery]);
+
+  const dayStats = useMemo(() => {
+    const records = attendance.filter(a => a.date === selectedDateStr);
+    return {
+      total: records.length,
+      present: records.filter(a => a.status === 'present').length,
+      absent: records.filter(a => a.status === 'absent').length,
+      late: records.filter(a => a.status === 'late').length,
+    };
+  }, [attendance, selectedDateStr]);
+
+  const attendanceRate = dayStats.total > 0 ? Math.round(((dayStats.present + dayStats.late) / dayStats.total) * 100) : 0;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -127,17 +154,18 @@ export default function AttendanceManagement() {
     }
   };
 
-  const attendanceRate = stats.total > 0 ? Math.round(((stats.present + stats.late) / stats.total) * 100) : 0;
-
-  const filteredAttendance = searchQuery
-    ? attendance.filter(a =>
-        a.students?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        a.students?.admission_number?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : attendance;
+  const getDayColor = (day: Date) => {
+    const dateStr = format(day, 'yyyy-MM-dd');
+    const summary = daySummaryMap.get(dateStr);
+    if (!summary || summary.total === 0) return 'bg-muted/20 text-muted-foreground';
+    const rate = (summary.present + summary.late) / summary.total;
+    if (rate >= 0.9) return 'bg-emerald-500 text-white';
+    if (rate >= 0.7) return 'bg-amber-500 text-white';
+    return 'bg-red-500 text-white';
+  };
 
   const handleExportCSV = () => {
-    const records = attendance.map(record => ({
+    const records = dayRecords.map(record => ({
       studentName: record.students?.full_name || 'N/A',
       admissionNumber: record.students?.admission_number || 'N/A',
       className: record.students?.classes ? `${record.students.classes.name} - ${record.students.classes.section}` : 'N/A',
@@ -146,13 +174,12 @@ export default function AttendanceManagement() {
       session: record.session || undefined,
       reason: record.reason || undefined,
     }));
-    const className = selectedClass === 'all' ? 'All Classes' : classes.find(c => c.id === selectedClass)?.name || '';
-    downloadAttendanceCSV(records, `attendance-${className}-${selectedDate}`);
+    downloadAttendanceCSV(records, `attendance-${selectedDateStr}`);
     toast({ title: 'Download started', description: 'CSV file is being downloaded.' });
   };
 
   const handleExportPDF = () => {
-    const records = attendance.map(record => ({
+    const records = dayRecords.map(record => ({
       studentName: record.students?.full_name || 'N/A',
       admissionNumber: record.students?.admission_number || 'N/A',
       className: record.students?.classes ? `${record.students.classes.name} - ${record.students.classes.section}` : 'N/A',
@@ -161,10 +188,11 @@ export default function AttendanceManagement() {
       session: record.session || undefined,
       reason: record.reason || undefined,
     }));
-    const className = selectedClass === 'all' ? 'All Classes' : classes.find(c => c.id === selectedClass)?.name || '';
-    downloadAttendancePDF(records, `Attendance Report - ${className}`, format(new Date(selectedDate), 'MMMM d, yyyy'));
+    downloadAttendancePDF(records, `Attendance Report`, format(selectedDate, 'MMMM d, yyyy'));
     toast({ title: 'Print window opened', description: 'Use the print dialog to save as PDF.' });
   };
+
+  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -175,183 +203,183 @@ export default function AttendanceManagement() {
       <div className="space-y-6 animate-fade-in">
         <BackButton to="/admin" />
         
-        {/* Header */}
         <div className="flex flex-col gap-1">
           <h1 className="font-display text-2xl font-bold">Attendance Reports</h1>
-          <p className="text-muted-foreground text-sm">View and manage student attendance records</p>
+          <p className="text-muted-foreground text-sm">Click any date on the calendar to view attendance</p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <Card className="card-elevated col-span-2 lg:col-span-1">
-            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-primary" />
-              </div>
-              <p className="text-2xl font-bold text-primary">{attendanceRate}%</p>
-              <p className="text-xs text-muted-foreground font-medium">Attendance Rate</p>
-              <Progress value={attendanceRate} className="h-1.5 w-full mt-1" />
-            </CardContent>
-          </Card>
-          <Card className="card-elevated">
-            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                <Users className="h-5 w-5 text-foreground" />
-              </div>
-              <p className="text-2xl font-bold">{stats.total}</p>
-              <p className="text-xs text-muted-foreground font-medium">Total</p>
-            </CardContent>
-          </Card>
-          <Card className="card-elevated">
-            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
-              <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
-                <CheckCircle2 className="h-5 w-5 text-success" />
-              </div>
-              <p className="text-2xl font-bold text-success">{stats.present}</p>
-              <p className="text-xs text-muted-foreground font-medium">Present</p>
-            </CardContent>
-          </Card>
-          <Card className="card-elevated">
-            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
-              <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
-                <XCircle className="h-5 w-5 text-destructive" />
-              </div>
-              <p className="text-2xl font-bold text-destructive">{stats.absent}</p>
-              <p className="text-xs text-muted-foreground font-medium">Absent</p>
-            </CardContent>
-          </Card>
-          <Card className="card-elevated">
-            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
-              <div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center">
-                <Clock className="h-5 w-5 text-warning" />
-              </div>
-              <p className="text-2xl font-bold text-warning">{stats.late}</p>
-              <p className="text-xs text-muted-foreground font-medium">Late</p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Class Filter */}
+        <Select value={selectedClass} onValueChange={setSelectedClass}>
+          <SelectTrigger className="w-[220px]"><SelectValue placeholder="Select class" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Classes</SelectItem>
+            {classes.map((c) => (
+              <SelectItem key={c.id} value={c.id}>{c.name} - {c.section}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        {/* Filters & Actions Bar */}
-        <Card className="card-elevated">
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <div className="flex-1 flex flex-col sm:flex-row gap-3">
-                <Select value={selectedClass} onValueChange={setSelectedClass}>
-                  <SelectTrigger className="sm:w-[200px]"><SelectValue placeholder="Select class" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Classes</SelectItem>
-                    {classes.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name} - {c.section}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className="flex items-center gap-2 border rounded-lg px-3 py-2 bg-background">
-                  <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <Input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => { setSelectedDate(e.target.value); setDateFrom(''); setDateTo(''); }}
-                    className="border-0 p-0 h-auto shadow-none focus-visible:ring-0"
-                  />
-                </div>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">or range:</div>
-                <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-[140px]" placeholder="From" />
-                <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-[140px]" placeholder="To" />
-                <div className="relative flex-1 min-w-[180px]">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search student..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Calendar */}
+          <Card className="card-elevated lg:col-span-1">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}><ChevronLeft className="h-4 w-4" /></Button>
+                <CardTitle className="text-lg font-display">{format(currentMonth, 'MMMM yyyy')}</CardTitle>
+                <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}><ChevronRight className="h-4 w-4" /></Button>
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" disabled={attendance.length === 0} className="shrink-0">
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleExportCSV}>
-                    <FileSpreadsheet className="h-4 w-4 mr-2" />
-                    Download CSV
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleExportPDF}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    Print / Save as PDF
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-7 gap-1">
+                {weekDays.map(day => (
+                  <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">{day}</div>
+                ))}
+                {Array.from({ length: firstDayOffset }).map((_, i) => (
+                  <div key={`empty-${i}`} />
+                ))}
+                {monthDays.map(day => {
+                  const dateStr = format(day, 'yyyy-MM-dd');
+                  const summary = daySummaryMap.get(dateStr);
+                  const isSelected = isSameDay(day, selectedDate);
+                  const isTodayDate = isToday(day);
+                  return (
+                    <button
+                      key={dateStr}
+                      onClick={() => setSelectedDate(day)}
+                      className={cn(
+                        "aspect-square rounded-lg flex flex-col items-center justify-center text-sm transition-all",
+                        getDayColor(day),
+                        summary && summary.total > 0 ? 'cursor-pointer hover:opacity-80 shadow-sm' : '',
+                        isSelected && 'ring-2 ring-primary ring-offset-2',
+                        isTodayDate && !summary?.total && 'ring-2 ring-primary/50',
+                      )}
+                    >
+                      <span className="font-medium">{format(day, 'd')}</span>
+                      {summary && summary.total > 0 && (
+                        <span className="text-[9px] opacity-80">{summary.total}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* Legend */}
+              <div className="flex flex-wrap items-center gap-3 mt-4 pt-3 border-t">
+                <div className="flex items-center gap-1.5 text-xs"><div className="w-3 h-3 rounded bg-emerald-500" /> ≥90%</div>
+                <div className="flex items-center gap-1.5 text-xs"><div className="w-3 h-3 rounded bg-amber-500" /> 70-89%</div>
+                <div className="flex items-center gap-1.5 text-xs"><div className="w-3 h-3 rounded bg-red-500" /> &lt;70%</div>
+                <div className="flex items-center gap-1.5 text-xs"><div className="w-3 h-3 rounded bg-muted/40" /> No Data</div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Day Details Panel */}
+          <div className="lg:col-span-2 space-y-4">
+            {/* Day Stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <Card className="card-elevated col-span-2 sm:col-span-1">
+                <CardContent className="p-3 flex flex-col items-center gap-1">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  <p className="text-xl font-bold text-primary">{attendanceRate}%</p>
+                  <p className="text-[10px] text-muted-foreground">Rate</p>
+                </CardContent>
+              </Card>
+              <Card className="card-elevated">
+                <CardContent className="p-3 flex flex-col items-center gap-1">
+                  <Users className="h-4 w-4 text-foreground" />
+                  <p className="text-xl font-bold">{dayStats.total}</p>
+                  <p className="text-[10px] text-muted-foreground">Total</p>
+                </CardContent>
+              </Card>
+              <Card className="card-elevated">
+                <CardContent className="p-3 flex flex-col items-center gap-1">
+                  <CheckCircle2 className="h-4 w-4 text-success" />
+                  <p className="text-xl font-bold text-success">{dayStats.present}</p>
+                  <p className="text-[10px] text-muted-foreground">Present</p>
+                </CardContent>
+              </Card>
+              <Card className="card-elevated">
+                <CardContent className="p-3 flex flex-col items-center gap-1">
+                  <XCircle className="h-4 w-4 text-destructive" />
+                  <p className="text-xl font-bold text-destructive">{dayStats.absent}</p>
+                  <p className="text-[10px] text-muted-foreground">Absent</p>
+                </CardContent>
+              </Card>
+              <Card className="card-elevated">
+                <CardContent className="p-3 flex flex-col items-center gap-1">
+                  <Clock className="h-4 w-4 text-warning" />
+                  <p className="text-xl font-bold text-warning">{dayStats.late}</p>
+                  <p className="text-[10px] text-muted-foreground">Late</p>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Attendance Table */}
-        <Card className="card-elevated">
-          <CardHeader className="pb-3">
-            <CardTitle className="font-display text-lg flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              Attendance Records
-              {!loadingData && <Badge variant="secondary" className="ml-2 text-xs">{filteredAttendance.length} records</Badge>}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loadingData ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Loading attendance...</p>
-              </div>
-            ) : filteredAttendance.length === 0 ? (
-              <div className="text-center py-16 space-y-3">
-                <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto">
-                  <Calendar className="h-8 w-8 text-muted-foreground" />
+            {/* Records Table */}
+            <Card className="card-elevated">
+              <CardHeader className="pb-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <CardTitle className="font-display text-lg flex items-center gap-2">
+                    {format(selectedDate, 'EEEE, MMM d, yyyy')}
+                    <Badge variant="secondary" className="text-xs">{dayRecords.length}</Badge>
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-9 w-[180px]" />
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" disabled={dayRecords.length === 0}><Download className="h-4 w-4" /></Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={handleExportCSV}><FileSpreadsheet className="h-4 w-4 mr-2" /> CSV</DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleExportPDF}><FileText className="h-4 w-4 mr-2" /> PDF</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-foreground">No records found</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {searchQuery ? 'Try a different search term' : 'No attendance records for this date'}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="overflow-x-auto rounded-lg border">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/30">
-                      <TableHead className="font-semibold">Student</TableHead>
-                      <TableHead className="font-semibold">Admission No</TableHead>
-                      <TableHead className="font-semibold">Class</TableHead>
-                      <TableHead className="font-semibold">Session</TableHead>
-                      <TableHead className="font-semibold">Status</TableHead>
-                      <TableHead className="font-semibold">Reason</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredAttendance.map((record) => (
-                      <TableRow key={record.id} className="hover:bg-muted/20 transition-colors">
-                        <TableCell className="font-medium">{record.students?.full_name || 'N/A'}</TableCell>
-                        <TableCell className="font-mono text-sm text-muted-foreground">{record.students?.admission_number || 'N/A'}</TableCell>
-                        <TableCell>
-                          {record.students?.classes ? (
-                            <Badge variant="outline" className="font-normal">
-                              {record.students.classes.name} - {record.students.classes.section}
-                            </Badge>
-                          ) : 'N/A'}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">{record.session || 'Full Day'}</TableCell>
-                        <TableCell>{getStatusBadge(record.status)}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{record.reason || '—'}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              </CardHeader>
+              <CardContent>
+                {loadingData ? (
+                  <div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+                ) : dayRecords.length === 0 ? (
+                  <div className="text-center py-12 space-y-2">
+                    <p className="font-medium text-foreground">No records</p>
+                    <p className="text-sm text-muted-foreground">No attendance data for this date</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto rounded-lg border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/30">
+                          <TableHead className="font-semibold">Student</TableHead>
+                          <TableHead className="font-semibold">Adm No</TableHead>
+                          <TableHead className="font-semibold">Class</TableHead>
+                          <TableHead className="font-semibold">Status</TableHead>
+                          <TableHead className="font-semibold">Reason</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {dayRecords.map((record) => (
+                          <TableRow key={record.id} className="hover:bg-muted/20 transition-colors">
+                            <TableCell className="font-medium">{record.students?.full_name || 'N/A'}</TableCell>
+                            <TableCell className="font-mono text-sm text-muted-foreground">{record.students?.admission_number || 'N/A'}</TableCell>
+                            <TableCell>
+                              {record.students?.classes ? (
+                                <Badge variant="outline" className="font-normal">{record.students.classes.name}-{record.students.classes.section}</Badge>
+                              ) : 'N/A'}
+                            </TableCell>
+                            <TableCell>{getStatusBadge(record.status)}</TableCell>
+                            <TableCell className="text-muted-foreground text-sm">{record.reason || '—'}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );
