@@ -142,41 +142,43 @@ export default function ExamResultsView() {
     <div className="space-y-4">
       {/* Filters */}
       <Card>
-        <CardContent className="pt-4">
-          <div className="flex flex-col sm:flex-row flex-wrap items-center gap-3">
-            <Select value={selectedExamName} onValueChange={setSelectedExamName}>
-              <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Exam / Unit" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Exams</SelectItem>
-                {examNames.map(name => <SelectItem key={name} value={name!}>{name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={selectedClass} onValueChange={(v) => { setSelectedClass(v); setSelectedStudent('all'); }}>
-              <SelectTrigger className="w-full sm:w-[160px]"><SelectValue placeholder="Class" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Classes</SelectItem>
-                {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}-{c.section.toUpperCase()}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-              <SelectTrigger className="w-full sm:w-[200px]"><SelectValue placeholder="Student" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Students</SelectItem>
-                {uniqueStudents.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.admission})</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <div className="relative w-full sm:w-[180px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9" />
+        <CardContent className="pt-4 pb-4">
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
+            <div className="flex flex-col sm:flex-row flex-1 gap-3">
+              <Select value={selectedExamName} onValueChange={setSelectedExamName}>
+                <SelectTrigger className="w-full sm:w-[170px]"><SelectValue placeholder="Exam / Unit" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Exams</SelectItem>
+                  {examNames.map(name => <SelectItem key={name} value={name!}>{name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={selectedClass} onValueChange={(v) => { setSelectedClass(v); setSelectedStudent('all'); }}>
+                <SelectTrigger className="w-full sm:w-[150px]"><SelectValue placeholder="Class" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Classes</SelectItem>
+                  {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}-{c.section.toUpperCase()}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={selectedStudent} onValueChange={setSelectedStudent}>
+                <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Student" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Students</SelectItem>
+                  {uniqueStudents.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.admission})</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <div className="relative w-full sm:w-[170px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9" />
+              </div>
             </div>
-            <div className="flex items-center gap-2 ml-auto">
-              <Button variant={viewMode === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('table')}>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button variant={viewMode === 'table' ? 'default' : 'outline'} className="h-10" onClick={() => setViewMode('table')}>
                 <BarChart3 className="h-4 w-4 mr-1" /> Table
               </Button>
-              <Button variant={viewMode === 'report' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('report')} disabled={selectedStudent === 'all'}>
+              <Button variant={viewMode === 'report' ? 'default' : 'outline'} className="h-10" onClick={() => setViewMode('report')} disabled={selectedStudent === 'all'}>
                 <Award className="h-4 w-4 mr-1" /> Report Card
               </Button>
-              <Button variant="outline" size="icon" className="h-9 w-9" onClick={handleExport} disabled={filteredResults.length === 0}>
+              <Button variant="outline" size="icon" className="h-10 w-10" onClick={handleExport} disabled={filteredResults.length === 0}>
                 <Download className="h-4 w-4" />
               </Button>
             </div>
