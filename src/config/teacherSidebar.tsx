@@ -10,6 +10,7 @@ import {
   Calendar,
   MessageSquare,
   UserPlus,
+  Image,
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -28,6 +29,7 @@ const baseTeacherSidebarItems: SidebarItem[] = [
   { icon: <ClipboardList className="h-5 w-5" />, label: 'Reports', path: '/teacher/reports' },
   { icon: <Bell className="h-5 w-5" />, label: 'Announcements', path: '/teacher/announcements' },
   { icon: <Calendar className="h-5 w-5" />, label: 'Leave Request', path: '/teacher/leave' },
+  { icon: <Image className="h-5 w-5" />, label: 'Gallery', path: '/teacher/gallery' },
   { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', path: '/teacher/messages' },
 ];
 

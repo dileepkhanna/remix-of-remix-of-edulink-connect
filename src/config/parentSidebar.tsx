@@ -10,6 +10,7 @@ import {
   MessageSquare,
   Award,
   CreditCard,
+  Image,
 } from 'lucide-react';
 
 export const parentSidebarItems = [
@@ -24,5 +25,6 @@ export const parentSidebarItems = [
   { icon: <Calendar className="h-5 w-5" />, label: 'Leave Request', path: '/parent/leave' },
   { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', path: '/parent/messages' },
   { icon: <Award className="h-5 w-5" />, label: 'Certificates', path: '/parent/certificates' },
+  { icon: <Image className="h-5 w-5" />, label: 'Gallery', path: '/parent/gallery' },
   { icon: <CreditCard className="h-5 w-5" />, label: 'Pay Fees', path: '/parent/fees' },
 ];
