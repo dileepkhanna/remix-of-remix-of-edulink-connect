@@ -157,29 +157,29 @@ export default function AttendanceCalendar({ attendance, childName, className = 
         </CardHeader>
         <CardContent>
           {/* Stats Row */}
-          <div className="grid grid-cols-4 gap-2 mb-4">
-            <div className="text-center p-2 bg-muted/30 rounded-lg">
-              <p className="text-lg font-bold">{monthStats.total}</p>
-              <p className="text-[10px] text-muted-foreground">Days</p>
+          <div className="grid grid-cols-4 gap-1.5 mb-3">
+            <div className="text-center p-1.5 bg-muted/30 rounded-md">
+              <p className="text-sm font-bold">{monthStats.total}</p>
+              <p className="text-[9px] text-muted-foreground">Days</p>
             </div>
-            <div className="text-center p-2 bg-emerald-500/10 rounded-lg">
-              <p className="text-lg font-bold text-emerald-600">{monthStats.present}</p>
-              <p className="text-[10px] text-muted-foreground">Present</p>
+            <div className="text-center p-1.5 bg-emerald-500/10 rounded-md">
+              <p className="text-sm font-bold text-emerald-600">{monthStats.present}</p>
+              <p className="text-[9px] text-muted-foreground">Present</p>
             </div>
-            <div className="text-center p-2 bg-red-500/10 rounded-lg">
-              <p className="text-lg font-bold text-red-600">{monthStats.absent}</p>
-              <p className="text-[10px] text-muted-foreground">Absent</p>
+            <div className="text-center p-1.5 bg-red-500/10 rounded-md">
+              <p className="text-sm font-bold text-red-600">{monthStats.absent}</p>
+              <p className="text-[9px] text-muted-foreground">Absent</p>
             </div>
-            <div className="text-center p-2 bg-amber-500/10 rounded-lg">
-              <p className="text-lg font-bold text-amber-600">{monthStats.late}</p>
-              <p className="text-[10px] text-muted-foreground">Late</p>
+            <div className="text-center p-1.5 bg-amber-500/10 rounded-md">
+              <p className="text-sm font-bold text-amber-600">{monthStats.late}</p>
+              <p className="text-[9px] text-muted-foreground">Late</p>
             </div>
           </div>
 
           {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-0.5">
             {weekDays.map(day => (
-              <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">{day}</div>
+              <div key={day} className="text-center text-[10px] font-medium text-muted-foreground py-1">{day}</div>
             ))}
             {Array.from({ length: firstDayOffset }).map((_, i) => (
               <div key={`empty-${i}`} />
@@ -193,7 +193,7 @@ export default function AttendanceCalendar({ attendance, childName, className = 
                   key={dateStr}
                   onClick={() => record && setSelectedDay(record)}
                   className={cn(
-                    "aspect-square rounded-lg flex flex-col items-center justify-center text-sm transition-all relative",
+                    "aspect-square rounded-md flex flex-col items-center justify-center text-xs transition-all relative",
                     record ? `${getStatusColor(record.status)} cursor-pointer hover:opacity-80 shadow-sm` : 'bg-muted/20 text-muted-foreground',
                     isTodayDate && !record && 'ring-2 ring-primary',
                     isTodayDate && record && 'ring-2 ring-white/50'
@@ -206,11 +206,11 @@ export default function AttendanceCalendar({ attendance, childName, className = 
           </div>
 
           {/* Legend */}
-          <div className="flex flex-wrap items-center gap-4 mt-4 pt-3 border-t">
-            <div className="flex items-center gap-1.5 text-xs"><div className="w-3 h-3 rounded bg-emerald-500" /> Present</div>
-            <div className="flex items-center gap-1.5 text-xs"><div className="w-3 h-3 rounded bg-red-500" /> Absent</div>
-            <div className="flex items-center gap-1.5 text-xs"><div className="w-3 h-3 rounded bg-amber-500" /> Late</div>
-            <div className="flex items-center gap-1.5 text-xs"><div className="w-3 h-3 rounded bg-muted/40" /> No Record</div>
+          <div className="flex flex-wrap items-center gap-3 mt-3 pt-2 border-t">
+            <div className="flex items-center gap-1 text-[10px]"><div className="w-2.5 h-2.5 rounded bg-emerald-500" /> Present</div>
+            <div className="flex items-center gap-1 text-[10px]"><div className="w-2.5 h-2.5 rounded bg-red-500" /> Absent</div>
+            <div className="flex items-center gap-1 text-[10px]"><div className="w-2.5 h-2.5 rounded bg-amber-500" /> Late</div>
+            <div className="flex items-center gap-1 text-[10px]"><div className="w-2.5 h-2.5 rounded bg-muted/40" /> No Record</div>
           </div>
         </CardContent>
       </Card>
