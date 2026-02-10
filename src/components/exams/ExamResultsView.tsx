@@ -143,40 +143,40 @@ export default function ExamResultsView() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="flex flex-col sm:flex-row flex-wrap items-center gap-3">
             <Select value={selectedExamName} onValueChange={setSelectedExamName}>
-              <SelectTrigger><SelectValue placeholder="Exam / Unit" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Exam / Unit" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Exams</SelectItem>
                 {examNames.map(name => <SelectItem key={name} value={name!}>{name}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={selectedClass} onValueChange={(v) => { setSelectedClass(v); setSelectedStudent('all'); }}>
-              <SelectTrigger><SelectValue placeholder="Class" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[160px]"><SelectValue placeholder="Class" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Classes</SelectItem>
                 {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}-{c.section.toUpperCase()}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-              <SelectTrigger><SelectValue placeholder="Student" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[200px]"><SelectValue placeholder="Student" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Students</SelectItem>
                 {uniqueStudents.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.admission})</SelectItem>)}
               </SelectContent>
             </Select>
-            <div className="relative">
+            <div className="relative w-full sm:w-[180px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9" />
             </div>
-            <div className="flex gap-2">
-              <Button variant={viewMode === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('table')} className="flex-1">
+            <div className="flex items-center gap-2 ml-auto">
+              <Button variant={viewMode === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('table')}>
                 <BarChart3 className="h-4 w-4 mr-1" /> Table
               </Button>
-              <Button variant={viewMode === 'report' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('report')} className="flex-1" disabled={selectedStudent === 'all'}>
+              <Button variant={viewMode === 'report' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('report')} disabled={selectedStudent === 'all'}>
                 <Award className="h-4 w-4 mr-1" /> Report Card
               </Button>
-              <Button variant="outline" size="sm" onClick={handleExport} disabled={filteredResults.length === 0}>
+              <Button variant="outline" size="icon" className="h-9 w-9" onClick={handleExport} disabled={filteredResults.length === 0}>
                 <Download className="h-4 w-4" />
               </Button>
             </div>
