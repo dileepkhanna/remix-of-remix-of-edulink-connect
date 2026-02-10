@@ -15,6 +15,7 @@ import { Plus, Search, Loader2, MoreHorizontal, Trash2, Calendar, FileText, Clip
 import { toast } from 'sonner';
 import ExamCreationWizard from '@/components/exams/ExamCreationWizard';
 import ExamMarksEntry from '@/components/exams/ExamMarksEntry';
+import ExamResultsView from '@/components/exams/ExamResultsView';
 import { Exam, ClassItem, SubjectItem } from '@/components/exams/types';
 import { BackButton } from '@/components/ui/back-button';
 
@@ -249,13 +250,7 @@ export default function ExamsManagement() {
           </TabsContent>
 
           <TabsContent value="results" className="mt-4">
-            <Card>
-              <CardContent className="py-12 text-center">
-                <BarChart3 className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
-                <p className="font-medium text-muted-foreground">Results Overview Coming Soon</p>
-                <p className="text-sm text-muted-foreground">View comprehensive exam analytics and reports here</p>
-              </CardContent>
-            </Card>
+            <ExamResultsView />
           </TabsContent>
         </Tabs>
 

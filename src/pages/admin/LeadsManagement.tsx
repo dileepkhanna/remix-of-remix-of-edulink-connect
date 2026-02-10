@@ -102,7 +102,10 @@ export default function LeadsManagement() {
       lead.primary_mobile?.includes(searchQuery) ||
       lead.father_name?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
-    const matchesTeacher = teacherFilter === 'all' || lead.created_by === teacherFilter;
+    // Support filtering by created_by (user_id) or assigned_teacher_id
+    const matchesTeacher = teacherFilter === 'all' || 
+      lead.created_by === teacherFilter || 
+      (lead.assigned_teacher_id && teachers.some(t => t.user_id === teacherFilter && t.id === lead.assigned_teacher_id));
     const matchesClass = classFilter === 'all' || lead.class_applying_for === classFilter;
     const matchesDateFrom = !dateFrom || new Date(lead.created_at) >= new Date(dateFrom);
     const matchesDateTo = !dateTo || new Date(lead.created_at) <= new Date(dateTo + 'T23:59:59');
@@ -313,6 +316,7 @@ export default function LeadsManagement() {
                         <TableHead>Class Applying</TableHead>
                         <TableHead>Primary Mobile</TableHead>
                         <TableHead>Father's Name</TableHead>
+                        <TableHead>Teacher</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Follow-up</TableHead>
                         <TableHead>Created</TableHead>
@@ -321,11 +325,15 @@ export default function LeadsManagement() {
                     </TableHeader>
                     <TableBody>
                       {loading ? (
-                        <TableRow><TableCell colSpan={8} className="text-center py-8">Loading...</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={9} className="text-center py-8">Loading...</TableCell></TableRow>
                       ) : filteredLeads.length === 0 ? (
-                        <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No leads found</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No leads found</TableCell></TableRow>
                       ) : (
-                        filteredLeads.map(lead => (
+                        filteredLeads.map(lead => {
+                          const assignedTeacher = teachers.find(t => t.id === lead.assigned_teacher_id);
+                          const createdByTeacher = teachers.find(t => t.user_id === lead.created_by);
+                          const teacherName = assignedTeacher?.full_name || createdByTeacher?.full_name || '—';
+                          return (
                           <TableRow key={lead.id}>
                             <TableCell className="font-medium">{lead.student_name}</TableCell>
                             <TableCell>{lead.class_applying_for || '—'}</TableCell>
@@ -335,6 +343,7 @@ export default function LeadsManagement() {
                               </a>
                             </TableCell>
                             <TableCell>{lead.father_name || '—'}</TableCell>
+                            <TableCell className="text-sm">{teacherName}</TableCell>
                             <TableCell>
                               <Select
                                 value={lead.status}
@@ -384,7 +393,8 @@ export default function LeadsManagement() {
                               </div>
                             </TableCell>
                           </TableRow>
-                        ))
+                          );
+                        })
                       )}
                     </TableBody>
                   </Table>
