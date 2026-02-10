@@ -79,8 +79,7 @@ export default function ParentAttendance() {
           filter: `student_id=eq.${studentId}`,
         },
         (payload) => {
-          // Re-fetch attendance data on any change
-          fetchAttendance(new Date());
+          fetchAttendance(new Date(), true);
         }
       )
       .subscribe();
@@ -90,10 +89,9 @@ export default function ParentAttendance() {
     };
   }, [studentId]);
 
-  const fetchAttendance = async (month: Date) => {
+  const fetchAttendance = async (month: Date, isBackground = false) => {
     if (!studentId) return;
-    setLoadingData(true);
-    // Fetch 6 months of data for smooth navigation
+    if (!isBackground) setLoadingData(true);
     const sixMonthsAgo = format(subMonths(startOfMonth(month), 5), 'yyyy-MM-dd');
     const monthEnd = format(endOfMonth(month), 'yyyy-MM-dd');
 
@@ -106,7 +104,7 @@ export default function ParentAttendance() {
       .order('date', { ascending: false });
 
     if (data) setAttendance(data);
-    setLoadingData(false);
+    if (!isBackground) setLoadingData(false);
   };
 
   if (loading || (loadingData && attendance.length === 0)) {
