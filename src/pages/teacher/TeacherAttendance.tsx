@@ -63,6 +63,7 @@ export default function TeacherAttendance() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [students, setStudents] = useState<Student[]>([]);
   const [attendance, setAttendance] = useState<Record<string, 'present' | 'absent' | 'late'>>({});
+  const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
   const [loadingData, setLoadingData] = useState(true);
   const [saving, setSaving] = useState(false);
   const [teacherId, setTeacherId] = useState<string | null>(null);
@@ -150,9 +151,11 @@ export default function TeacherAttendance() {
             .eq('date', dateStr);
 
           const attendanceMap: Record<string, 'present' | 'absent' | 'late'> = {};
+          const confirmedSet = new Set<string>();
           if (attendanceData) {
             attendanceData.forEach(a => {
               attendanceMap[a.student_id] = a.status as 'present' | 'absent' | 'late';
+              confirmedSet.add(a.student_id);
             });
           }
           studentData.forEach(s => {
@@ -161,6 +164,7 @@ export default function TeacherAttendance() {
             }
           });
           setAttendance(attendanceMap);
+          setConfirmed(confirmedSet);
         }
       } catch (error) {
         console.error('Error fetching students:', error);
@@ -174,6 +178,7 @@ export default function TeacherAttendance() {
 
   const setStatus = async (studentId: string, status: 'present' | 'absent' | 'late') => {
     setAttendance(prev => ({ ...prev, [studentId]: status }));
+    setConfirmed(prev => new Set(prev).add(studentId));
 
     if (!teacherId) return;
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
@@ -459,42 +464,56 @@ export default function TeacherAttendance() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          onClick={() => setStatus(student.id, 'present')}
-                          className={cn(
-                            "flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border",
-                            attendance[student.id] === 'present'
-                              ? "bg-success/15 text-success border-success/30 shadow-sm"
-                              : "bg-background text-muted-foreground border-border hover:bg-success/5 hover:text-success hover:border-success/20"
-                          )}
-                        >
-                          <Check className="h-3.5 w-3.5" />
-                          <span className="hidden sm:inline">Present</span>
-                        </button>
-                        <button
-                          onClick={() => setStatus(student.id, 'absent')}
-                          className={cn(
-                            "flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border",
-                            attendance[student.id] === 'absent'
-                              ? "bg-destructive/15 text-destructive border-destructive/30 shadow-sm"
-                              : "bg-background text-muted-foreground border-border hover:bg-destructive/5 hover:text-destructive hover:border-destructive/20"
-                          )}
-                        >
-                          <X className="h-3.5 w-3.5" />
-                          <span className="hidden sm:inline">Absent</span>
-                        </button>
-                        <button
-                          onClick={() => setStatus(student.id, 'late')}
-                          className={cn(
-                            "flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border",
-                            attendance[student.id] === 'late'
-                              ? "bg-warning/15 text-warning border-warning/30 shadow-sm"
-                              : "bg-background text-muted-foreground border-border hover:bg-warning/5 hover:text-warning hover:border-warning/20"
-                          )}
-                        >
-                          <Clock className="h-3.5 w-3.5" />
-                          <span className="hidden sm:inline">Late</span>
-                        </button>
+                        {confirmed.has(student.id) && attendance[student.id] !== 'present' ? null : (
+                          <button
+                            onClick={() => setStatus(student.id, 'present')}
+                            className={cn(
+                              "flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border",
+                              attendance[student.id] === 'present'
+                                ? "bg-success/15 text-success border-success/30 shadow-sm"
+                                : "bg-background text-muted-foreground border-border hover:bg-success/5 hover:text-success hover:border-success/20"
+                            )}
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Present</span>
+                          </button>
+                        )}
+                        {confirmed.has(student.id) && attendance[student.id] !== 'absent' ? null : (
+                          <button
+                            onClick={() => setStatus(student.id, 'absent')}
+                            className={cn(
+                              "flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border",
+                              attendance[student.id] === 'absent'
+                                ? "bg-destructive/15 text-destructive border-destructive/30 shadow-sm"
+                                : "bg-background text-muted-foreground border-border hover:bg-destructive/5 hover:text-destructive hover:border-destructive/20"
+                            )}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Absent</span>
+                          </button>
+                        )}
+                        {confirmed.has(student.id) && attendance[student.id] !== 'late' ? null : (
+                          <button
+                            onClick={() => setStatus(student.id, 'late')}
+                            className={cn(
+                              "flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border",
+                              attendance[student.id] === 'late'
+                                ? "bg-warning/15 text-warning border-warning/30 shadow-sm"
+                                : "bg-background text-muted-foreground border-border hover:bg-warning/5 hover:text-warning hover:border-warning/20"
+                            )}
+                          >
+                            <Clock className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Late</span>
+                          </button>
+                        )}
+                        {confirmed.has(student.id) && (
+                          <button
+                            onClick={() => setConfirmed(prev => { const n = new Set(prev); n.delete(student.id); return n; })}
+                            className="text-[10px] text-muted-foreground hover:text-foreground underline ml-1"
+                          >
+                            Change
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
