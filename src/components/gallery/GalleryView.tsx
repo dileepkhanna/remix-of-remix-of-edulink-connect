@@ -57,11 +57,11 @@ export default function GalleryView() {
         ) : images.length === 0 ? (
           <Card><CardContent className="py-12 text-center text-muted-foreground"><ImageIcon className="h-12 w-12 mx-auto mb-2 opacity-30" /><p>No images in this folder</p></CardContent></Card>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
             {images.map(img => (
               <Card key={img.id} className="overflow-hidden group cursor-pointer" onClick={() => setPreviewImage(img)}>
                 <div className="aspect-square relative">
-                  <img src={img.image_url} alt={img.caption || ''} className="w-full h-full object-cover" />
+                  <img src={img.image_url} alt={img.caption || ''} className="w-full h-full object-cover" loading="lazy" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                     <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
