@@ -171,11 +171,11 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
       {/* Mobile Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 bottom-0 w-64 bg-sidebar text-sidebar-foreground z-50 transform transition-transform duration-300 lg:hidden",
+          "fixed left-0 top-0 bottom-0 w-64 bg-sidebar text-sidebar-foreground z-50 transform transition-transform duration-300 lg:hidden flex flex-col",
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", roleGradient)}>
               <GraduationCap className="h-5 w-5 text-white" />
@@ -190,7 +190,7 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
           </button>
         </div>
 
-        <nav className="flex-1 py-4 px-3 space-y-1">
+        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
           {sidebarItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
