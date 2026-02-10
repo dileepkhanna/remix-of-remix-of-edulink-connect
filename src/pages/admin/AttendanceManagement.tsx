@@ -55,6 +55,8 @@ export default function AttendanceManagement() {
   const [classes, setClasses] = useState<{ id: string; name: string; section: string }[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
   const [loadingData, setLoadingData] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -72,7 +74,7 @@ export default function AttendanceManagement() {
 
   useEffect(() => {
     fetchAttendance();
-  }, [selectedClass, selectedDate]);
+  }, [selectedClass, selectedDate, dateFrom, dateTo]);
 
   const fetchClasses = async () => {
     const { data } = await supabase.from('classes').select('*').order('name');
@@ -85,8 +87,18 @@ export default function AttendanceManagement() {
     let query = supabase
       .from('attendance')
       .select('*, students(full_name, admission_number, class_id, classes(name, section))')
-      .eq('date', selectedDate)
       .order('created_at', { ascending: false });
+
+    // Support date range or single date
+    if (dateFrom && dateTo) {
+      query = query.gte('date', dateFrom).lte('date', dateTo);
+    } else if (dateFrom) {
+      query = query.gte('date', dateFrom);
+    } else if (dateTo) {
+      query = query.lte('date', dateTo);
+    } else {
+      query = query.eq('date', selectedDate);
+    }
 
     const { data } = await query;
 
@@ -238,10 +250,13 @@ export default function AttendanceManagement() {
                   <Input
                     type="date"
                     value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
+                    onChange={(e) => { setSelectedDate(e.target.value); setDateFrom(''); setDateTo(''); }}
                     className="border-0 p-0 h-auto shadow-none focus-visible:ring-0"
                   />
                 </div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">or range:</div>
+                <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-[140px]" placeholder="From" />
+                <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-[140px]" placeholder="To" />
                 <div className="relative flex-1 min-w-[180px]">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
