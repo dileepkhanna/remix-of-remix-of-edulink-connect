@@ -111,12 +111,14 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
         </div>
 
         {/* Sidebar Toggle */}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="absolute -right-3 top-20 w-6 h-6 bg-sidebar border border-sidebar-border rounded-full flex items-center justify-center hover:bg-sidebar-accent transition-colors"
-        >
-          <ChevronRight className={cn("h-4 w-4 text-sidebar-foreground transition-transform", !sidebarOpen && "rotate-180")} />
-        </button>
+        <div className="flex justify-end px-3 pt-2">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="w-7 h-7 bg-sidebar-accent border border-sidebar-border rounded-full flex items-center justify-center hover:bg-sidebar-accent/80 transition-colors"
+          >
+            <ChevronRight className={cn("h-4 w-4 text-sidebar-foreground transition-transform", sidebarOpen && "rotate-180")} />
+          </button>
+        </div>
 
         {/* Navigation */}
         <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
