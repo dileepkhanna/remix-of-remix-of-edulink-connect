@@ -91,7 +91,7 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          "hidden lg:flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out",
+          "hidden lg:flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out overflow-hidden relative",
           sidebarOpen ? "w-64" : "w-20"
         )}
       >
