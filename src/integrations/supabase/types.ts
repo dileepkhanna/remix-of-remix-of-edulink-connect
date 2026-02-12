@@ -1194,6 +1194,7 @@ export type Database = {
     }
     Functions: {
       admin_exists: { Args: never; Returns: boolean }
+      get_admin_user_ids: { Args: never; Returns: string[] }
       get_parent_login_email: {
         Args: { student_identifier: string }
         Returns: string
