@@ -28,9 +28,9 @@
     --muted: 30 12% 91%;
     --muted-foreground: 210 12% 46%;
 
-    /* Accent - ASE Red */
-    --accent: 4 78% 55%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent - Soft neutral for hover states */
+    --accent: 210 15% 93%;
+    --accent-foreground: 210 20% 16%;
 
     /* Success - Olive */
     --success: 85 35% 45%;
@@ -106,8 +106,8 @@
     --muted: 210 16% 18%;
     --muted-foreground: 210 10% 58%;
 
-    --accent: 4 70% 52%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 210 15% 18%;
+    --accent-foreground: 210 12% 95%;
 
     --destructive: 355 58% 42%;
     --destructive-foreground: 30 12% 95%;
