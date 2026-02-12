@@ -71,7 +71,7 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
 
   // Class/Student selection for teachers and admins
   const [showNewMessage, setShowNewMessage] = useState(false);
-  const [messageType, setMessageType] = useState<'parent' | 'teacher'>('parent');
+  const [messageType, setMessageType] = useState<'parent' | 'teacher' | 'admin'>('parent');
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [students, setStudents] = useState<StudentOption[]>([]);
@@ -83,6 +83,9 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>('');
   const [loadingTeachers, setLoadingTeachers] = useState(false);
 
+  // Admin info for teacher messaging
+  const [adminUser, setAdminUser] = useState<{ userId: string; name: string; avatar?: string } | null>(null);
+
   // Load contacts based on role
   useEffect(() => {
     loadContacts();
@@ -91,6 +94,9 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
     }
     if (currentUserRole === 'admin') {
       loadTeachers();
+    }
+    if (currentUserRole === 'teacher') {
+      loadAdminUser();
     }
   }, [currentUserId, currentUserRole]);
 
@@ -228,6 +234,32 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
     }
   };
 
+  const loadAdminUser = async () => {
+    try {
+      const { data: adminRoles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+
+      if (adminRoles && adminRoles.length > 0) {
+        const adminUserId = adminRoles[0].user_id;
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, photo_url')
+          .eq('user_id', adminUserId)
+          .maybeSingle();
+
+        setAdminUser({
+          userId: adminUserId,
+          name: profile?.full_name || 'Admin',
+          avatar: profile?.photo_url || undefined,
+        });
+      }
+    } catch (error) {
+      console.error('Error loading admin user:', error);
+    }
+  };
+
   const loadStudentsForClass = async (classId: string) => {
     setLoadingStudents(true);
     try {
@@ -280,8 +312,36 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
   const startNewConversation = () => {
     if (messageType === 'teacher') {
       startTeacherConversation();
+    } else if (messageType === 'admin') {
+      startAdminConversation();
     } else {
       startParentConversation();
+    }
+  };
+
+  const startAdminConversation = () => {
+    if (!adminUser) {
+      toast.error('No admin found');
+      return;
+    }
+
+    const newContact: Contact = {
+      id: adminUser.userId,
+      name: adminUser.name,
+      role: 'admin',
+      roleLabel: 'Principal',
+      avatar: adminUser.avatar,
+    };
+
+    setSelectedContact(newContact);
+    setMessages([]);
+    setShowNewMessage(false);
+    setMessageType('parent');
+
+    loadMessages(newContact);
+
+    if (!contacts.find(c => c.id === newContact.id)) {
+      setContacts(prev => [newContact, ...prev]);
     }
   };
 
@@ -500,10 +560,19 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
           studentName = student?.full_name || '';
         }
 
+        // Check if this contact is an admin
+        const { data: adminCheck } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', otherId)
+          .eq('role', 'admin')
+          .maybeSingle();
+
         contactList.push({
           id: otherId,
-          name: profile?.full_name || 'Parent',
-          role: 'parent',
+          name: profile?.full_name || (adminCheck ? 'Admin' : 'Parent'),
+          role: adminCheck ? 'admin' : 'parent',
+          roleLabel: adminCheck ? 'Principal' : undefined,
           avatar: profile?.photo_url || undefined,
           studentId: msg.student_id || undefined,
           studentName: studentName
@@ -682,8 +751,8 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
           {/* New Message Picker for Teachers/Admins */}
           {showNewMessage && (currentUserRole === 'teacher' || currentUserRole === 'admin') && (
             <div className="p-3 border-b space-y-3 bg-muted/30">
-              {/* Admin can choose to message parent or teacher */}
-              {currentUserRole === 'admin' && (
+              {/* Role-based message type toggle */}
+              {(currentUserRole === 'admin' || currentUserRole === 'teacher') && (
                 <div className="flex gap-1 p-1 bg-muted rounded-lg">
                   <Button
                     size="sm"
@@ -696,19 +765,47 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
                   >
                     Parent
                   </Button>
-                  <Button
-                    size="sm"
-                    variant={messageType === 'teacher' ? 'default' : 'ghost'}
-                    className="flex-1 h-7 text-xs"
-                    onClick={() => {
-                      setMessageType('teacher');
-                      setSelectedClassId('');
-                      setSelectedStudentId('');
-                    }}
-                  >
-                    Teacher
-                  </Button>
+                  {currentUserRole === 'admin' && (
+                    <Button
+                      size="sm"
+                      variant={messageType === 'teacher' ? 'default' : 'ghost'}
+                      className="flex-1 h-7 text-xs"
+                      onClick={() => {
+                        setMessageType('teacher');
+                        setSelectedClassId('');
+                        setSelectedStudentId('');
+                      }}
+                    >
+                      Teacher
+                    </Button>
+                  )}
+                  {currentUserRole === 'teacher' && (
+                    <Button
+                      size="sm"
+                      variant={messageType === 'admin' ? 'default' : 'ghost'}
+                      className="flex-1 h-7 text-xs"
+                      onClick={() => {
+                        setMessageType('admin');
+                        setSelectedClassId('');
+                        setSelectedStudentId('');
+                      }}
+                    >
+                      Admin
+                    </Button>
+                  )}
                 </div>
+              )}
+
+              {/* Admin message for teacher */}
+              {currentUserRole === 'teacher' && messageType === 'admin' && (
+                <Button 
+                  size="sm" 
+                  className="w-full"
+                  onClick={startNewConversation}
+                  disabled={!adminUser}
+                >
+                  {adminUser ? `Message ${adminUser.name}` : 'No admin available'}
+                </Button>
               )}
 
               {/* Teacher selection for admin */}
@@ -744,7 +841,7 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
               )}
 
               {/* Class/Student selection for parent messaging */}
-              {(currentUserRole === 'teacher' || (currentUserRole === 'admin' && messageType === 'parent')) && (
+              {((currentUserRole === 'teacher' && messageType === 'parent') || (currentUserRole === 'admin' && messageType === 'parent')) && (
                 <>
                   <Select value={selectedClassId} onValueChange={setSelectedClassId}>
                     <SelectTrigger className="h-9">
