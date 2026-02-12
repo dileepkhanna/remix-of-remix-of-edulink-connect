@@ -35,7 +35,7 @@ export default function Index() {
             </div>
             
             <h1 className="font-display text-4xl lg:text-5xl font-bold text-foreground mb-6">
-              Welcome to <span className="text-gradient">Smart_Educonnect</span>
+              Welcome to <span className="text-gradient">SmartEduConnect</span>
             </h1>
             
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
@@ -93,7 +93,7 @@ export default function Index() {
       {/* Footer */}
       <footer className="border-t py-8 mt-auto">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>© 2026 Smart_Educonnect. All rights reserved.</p>
+          <p>© 2026 SmartEduConnect. All rights reserved.</p>
         </div>
       </footer>
     </div>

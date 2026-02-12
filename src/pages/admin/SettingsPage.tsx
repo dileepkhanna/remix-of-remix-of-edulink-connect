@@ -40,7 +40,7 @@ export default function SettingsPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [settings, setSettings] = useState({
-    schoolName: 'Smart_Educonnect School',
+    schoolName: 'SmartEduConnect School',
     schoolEmail: 'admin@smarteduconnect.com',
     schoolPhone: '+1234567890',
     schoolAddress: '123 Education Street',
