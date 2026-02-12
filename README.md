@@ -48,11 +48,13 @@ Smart EduConnect is a full-stack school ERP that digitizes day-to-day school ope
 | **Exams** | Create exams, manage schedules, and view results |
 | **Leads (CRM)** | Track admission inquiries with status pipeline, follow-ups, and inline status updates |
 | **Announcements** | Broadcast announcements to specific audiences |
-| **Leave Requests** | Approve or reject leave applications from teachers and students |
-| **Certificates** | Process certificate requests (bonafide, transfer, etc.) |
+| **Leave Requests** | Approve or reject leave applications from teachers and students; view/download attachments |
+| **Certificates** | Process certificate requests with document attachment download |
 | **Complaints** | Handle and respond to complaints |
 | **Fees** | Manage fee structures, track payments, and generate receipts |
-| **Messages** | Direct messaging system |
+| **Messages** | Direct messaging system with file/image sharing |
+| **Settings** | App configuration, module toggles, and lead permissions |
+| **Gallery** | Manage photo gallery with folders |
 | **Settings** | App configuration, module toggles, and lead permissions |
 
 ### 👩‍🏫 Teacher Panel
@@ -62,14 +64,15 @@ Smart EduConnect is a full-stack school ERP that digitizes day-to-day school ope
 | **My Classes** | View assigned classes and sections |
 | **Students** | Browse students in assigned classes |
 | **Attendance** | Mark daily attendance with Present/Absent/Late buttons, quick "Mark All" actions, search, and sticky action bar |
-| **Homework** | Assign and manage homework with due dates |
+| **Homework** | Assign and manage homework with due dates and file attachments (PDF, Word, images) |
 | **Exam Marks** | Enter and manage exam scores with grading |
 | **Reports** | Create behavioral and academic reports for students |
 | **Announcements** | View school-wide announcements |
-| **Leave Request** | Submit personal leave applications |
+| **Leave Request** | Submit personal leave applications with optional document attachments |
 | **Leads** | Manage admission leads with inline status dropdown (when enabled by admin) |
-| **Messages** | Communicate with parents and admin |
+| **Messages** | Communicate with parents and admin with file/image sharing |
 | **Timetable** | View personal teaching schedule |
+| **Gallery** | View school photo gallery |
 
 ### 👨‍👩‍👧 Parent Panel
 | Module | Description |
@@ -78,14 +81,15 @@ Smart EduConnect is a full-stack school ERP that digitizes day-to-day school ope
 | **My Child** | Detailed child profile and academic info |
 | **Attendance** | View 30-day attendance history with stats, progress bar, and day-of-week details |
 | **Timetable** | View child's weekly class schedule |
-| **Homework** | Track assigned homework and due dates |
-| **Exam Results** | View marks, grades, and performance analysis |
+| **Homework** | Track assigned homework, due dates, and download teacher-uploaded attachments |
+| **Exam Results** | View marks, grades, and performance analysis with exam name filtering |
 | **Progress** | Track academic progress and trends |
 | **Announcements** | Read school announcements |
-| **Leave Request** | Apply for child's leave |
-| **Messages** | Communicate with teachers |
-| **Certificates** | Request certificates for child |
+| **Leave Request** | Apply for child's leave with optional document attachments |
+| **Messages** | Communicate with all teachers and admin, with file/image sharing |
+| **Certificates** | Request certificates for child with optional document attachments |
 | **Pay Fees** | View fee details and payment status |
+| **Gallery** | View school photo gallery |
 
 ---
 
@@ -527,7 +531,7 @@ Fee records with payment tracking.
 ---
 
 #### `leave_requests`
-Leave applications for teachers and students.
+Leave applications for teachers and students with optional document attachments.
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|---------|
@@ -538,6 +542,7 @@ Leave applications for teachers and students.
 | `from_date` | date | No | — |
 | `to_date` | date | No | — |
 | `reason` | text | No | — |
+| `attachment_url` | text | Yes | — |
 | `status` | text | Yes | `'pending'` |
 | `approved_by` | uuid | Yes | — |
 | `created_at` | timestamptz | Yes | `now()` |
@@ -590,7 +595,7 @@ Complaint tickets with response tracking.
 ---
 
 #### `certificate_requests`
-Certificate request processing.
+Certificate request processing with optional document attachments.
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|---------|
@@ -599,6 +604,7 @@ Certificate request processing.
 | `certificate_type` | text | No | — |
 | `requested_by` | uuid | Yes | — |
 | `approved_by` | uuid | Yes | — |
+| `attachment_url` | text | Yes | — |
 | `status` | text | Yes | `'pending'` |
 | `created_at` | timestamptz | Yes | `now()` |
 
@@ -610,7 +616,7 @@ Certificate request processing.
 ---
 
 #### `messages`
-Direct messaging between users.
+Direct messaging between users with file and image sharing.
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|---------|
@@ -620,6 +626,8 @@ Direct messaging between users.
 | `content` | text | No | — |
 | `is_read` | boolean | No | `false` |
 | `student_id` | uuid (→ `students.id`) | Yes | — |
+| `attachment_url` | text | Yes | — |
+| `attachment_type` | text | Yes | — |
 | `created_at` | timestamptz | No | `now()` |
 
 **RLS Policies:**
@@ -824,7 +832,7 @@ All edge functions run on Deno runtime and use the Supabase service role key for
 
 | Bucket | Public | Purpose |
 |--------|--------|---------|
-| `photos` | Yes | Student and teacher profile photos |
+| `photos` | Yes | Student/teacher profile photos, homework attachments, leave/certificate documents, message file sharing |
 | `gallery` | Yes | School gallery images organized by folders |
 
 ---
@@ -854,12 +862,13 @@ All edge functions run on Deno runtime and use the Supabase service role key for
 
 ## 🎨 Design System
 
-Smart EduConnect uses a **teal-based color palette** with semantic design tokens:
+Smart EduConnect uses a semantic design token system with role-based color differentiation:
 
-- **Primary**: Deep Teal (`hsl(180 47% 33%)`)
-- **Secondary**: Mint Green (`hsl(145 45% 51%)`)
-- **Accent**: Amber Gold (`hsl(38 89% 65%)`)
-- **Role Colors**: Admin (Teal), Teacher (Green), Parent (Amber)
+- **Primary**: ASE Blue (`hsl(210 85% 40%)`)
+- **Secondary**: Warm Sand (`hsl(32 45% 68%)`)
+- **Role Colors**: Admin (Blue), Teacher (Deep Forest Green `#1a3628`), Parent (Grey-blue `#6c7580`)
+- **Hidden scrollbars** — Clean UI with invisible scrollbars across the app
+- **Fixed sidebar** — Desktop sidebar stays fixed while content scrolls independently
 
 **Typography**: Plus Jakarta Sans (headings) + Inter (body text)
 
