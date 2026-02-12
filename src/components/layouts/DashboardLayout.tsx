@@ -339,11 +339,6 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Name always visible */}
-            <span className="hidden md:block text-sm font-medium text-foreground">
-              {displayName || 'User'}
-            </span>
-
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />
