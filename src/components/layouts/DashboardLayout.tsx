@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  GraduationCap,
   Menu,
   X,
   LogOut,
@@ -98,9 +97,7 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
         {/* Logo */}
         <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
           <div className={cn("flex items-center gap-3", !sidebarOpen && "justify-center w-full")}>
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", roleGradient)}>
-              <GraduationCap className="h-5 w-5 text-white" />
-            </div>
+            <img src="/ase-logo.jpg" alt="ASE Tech Logo" className="h-10 w-auto rounded-lg object-contain" />
             {sidebarOpen && (
               <div>
                 <h1 className="font-display font-bold text-lg">Smart_Educonnect</h1>
@@ -179,9 +176,7 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
       >
         <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", roleGradient)}>
-              <GraduationCap className="h-5 w-5 text-white" />
-            </div>
+            <img src="/ase-logo.jpg" alt="ASE Tech Logo" className="h-10 w-auto rounded-lg object-contain" />
             <div>
               <h1 className="font-display font-bold text-lg">Smart_Educonnect</h1>
               <p className="text-xs text-sidebar-foreground/60">{roleLabel}</p>
