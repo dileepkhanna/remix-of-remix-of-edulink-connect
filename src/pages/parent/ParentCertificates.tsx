@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Loader2, Award, Plus, Clock, CheckCircle2, XCircle, FileText } from 'lucide-react';
+import { Loader2, Award, Plus, Clock, CheckCircle2, XCircle, FileText, Paperclip } from 'lucide-react';
 import { parentSidebarItems } from '@/config/parentSidebar';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,6 +19,7 @@ interface CertificateRequest {
   certificate_type: string;
   status: string;
   created_at: string;
+  attachment_url: string | null;
 }
 
 const CERTIFICATE_TYPES = [
@@ -40,6 +42,7 @@ export default function ParentCertificates() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedType, setSelectedType] = useState('');
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'parent')) {
@@ -78,7 +81,7 @@ export default function ParentCertificates() {
           .eq('student_id', sid)
           .order('created_at', { ascending: false });
 
-        if (requestsData) setRequests(requestsData);
+        if (requestsData) setRequests(requestsData as CertificateRequest[]);
       }
     }
     setLoadingData(false);
@@ -91,10 +94,26 @@ export default function ParentCertificates() {
     }
 
     setIsSubmitting(true);
+    let attachmentUrl: string | null = null;
+
+    if (attachmentFile) {
+      const fileExt = attachmentFile.name.split('.').pop();
+      const filePath = `certificate-docs/${user.id}/${Date.now()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage.from('photos').upload(filePath, attachmentFile);
+      if (uploadError) {
+        toast({ variant: 'destructive', title: 'Upload Error', description: uploadError.message });
+        setIsSubmitting(false);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from('photos').getPublicUrl(filePath);
+      attachmentUrl = urlData.publicUrl;
+    }
+
     const { error } = await supabase.from('certificate_requests').insert({
       student_id: studentId,
       certificate_type: selectedType,
       requested_by: user.id,
+      attachment_url: attachmentUrl,
     });
 
     if (error) {
@@ -103,6 +122,7 @@ export default function ParentCertificates() {
       toast({ title: 'Success', description: 'Certificate request submitted successfully' });
       setDialogOpen(false);
       setSelectedType('');
+      setAttachmentFile(null);
       fetchData();
     }
     setIsSubmitting(false);
@@ -148,6 +168,11 @@ export default function ParentCertificates() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-2">
+                  <Label>Attachment (Optional)</Label>
+                  <Input type="file" accept="image/*,.pdf,.doc,.docx" onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)} />
+                  <p className="text-xs text-muted-foreground">Upload a supporting document or image (optional)</p>
+                </div>
                 <p className="text-sm text-muted-foreground">
                   Certificate requests are typically processed within 3-5 working days.
                 </p>
@@ -186,6 +211,11 @@ export default function ParentCertificates() {
                           <p className="text-sm text-muted-foreground">
                             Requested: {new Date(request.created_at).toLocaleDateString()}
                           </p>
+                          {request.attachment_url && (
+                            <a href={request.attachment_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-1">
+                              <Paperclip className="h-3 w-3" /> View Attachment
+                            </a>
+                          )}
                         </div>
                       </div>
                       <Badge className={`${style.class} flex items-center gap-1`}>

@@ -94,13 +94,16 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
   // Load contacts based on role
   useEffect(() => {
     loadContacts();
-    if (currentUserRole === 'teacher' || currentUserRole === 'admin') {
+    if (currentUserRole === 'teacher' || currentUserRole === 'admin' || currentUserRole === 'parent') {
       loadClasses();
     }
-    if (currentUserRole === 'admin') {
+    if (currentUserRole === 'admin' || currentUserRole === 'parent') {
       loadTeachers();
     }
     if (currentUserRole === 'teacher') {
+      loadAdminUser();
+    }
+    if (currentUserRole === 'parent') {
       loadAdminUser();
     }
   }, [currentUserId, currentUserRole]);
@@ -760,7 +763,7 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
               <MessageCircle className="h-4 w-4 text-primary" />
               Conversations
             </CardTitle>
-            {(currentUserRole === 'teacher' || currentUserRole === 'admin') && (
+            {(currentUserRole === 'teacher' || currentUserRole === 'admin' || currentUserRole === 'parent') && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -913,13 +916,110 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
             </div>
           )}
 
+          {/* New Message Picker for Parents */}
+          {showNewMessage && currentUserRole === 'parent' && (
+            <div className="p-3 border-b space-y-3 bg-muted/30">
+              <div className="flex gap-1 p-1 bg-muted rounded-lg">
+                <Button
+                  size="sm"
+                  variant={messageType === 'teacher' ? 'default' : 'ghost'}
+                  className="flex-1 h-7 text-xs"
+                  onClick={() => setMessageType('teacher')}
+                >
+                  Teacher
+                </Button>
+                <Button
+                  size="sm"
+                  variant={messageType === 'admin' ? 'default' : 'ghost'}
+                  className="flex-1 h-7 text-xs"
+                  onClick={() => setMessageType('admin')}
+                >
+                  Admin
+                </Button>
+              </div>
+
+              {messageType === 'admin' && (
+                <Button 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => {
+                    if (!adminUser) { toast.error('No admin available'); return; }
+                    const newContact: Contact = {
+                      id: adminUser.userId,
+                      name: adminUser.name,
+                      role: 'admin',
+                      roleLabel: 'Principal',
+                      avatar: adminUser.avatar,
+                    };
+                    setSelectedContact(newContact);
+                    setMessages([]);
+                    setShowNewMessage(false);
+                    loadMessages(newContact);
+                    if (!contacts.find(c => c.id === newContact.id)) {
+                      setContacts(prev => [newContact, ...prev]);
+                    }
+                  }}
+                  disabled={!adminUser}
+                >
+                  {adminUser ? `Message ${adminUser.name}` : 'No admin available'}
+                </Button>
+              )}
+
+              {messageType === 'teacher' && (
+                <>
+                  <Select 
+                    value={selectedTeacherId} 
+                    onValueChange={setSelectedTeacherId}
+                    disabled={loadingTeachers}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder={loadingTeachers ? "Loading..." : "Select Teacher"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teachers.map(t => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name} ({t.teacherId})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {selectedTeacherId && (
+                    <Button 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => {
+                        const teacher = teachers.find(t => t.id === selectedTeacherId);
+                        if (!teacher) return;
+                        const newContact: Contact = {
+                          id: teacher.userId,
+                          name: teacher.name,
+                          role: 'teacher',
+                          roleLabel: `ID: ${teacher.teacherId}`,
+                        };
+                        setSelectedContact(newContact);
+                        setMessages([]);
+                        setShowNewMessage(false);
+                        setSelectedTeacherId('');
+                        loadMessages(newContact);
+                        if (!contacts.find(c => c.id === newContact.id)) {
+                          setContacts(prev => [newContact, ...prev]);
+                        }
+                      }}
+                    >
+                      Message Teacher
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
           <ScrollArea className="h-[500px]">
             {contacts.length === 0 ? (
               <div className="p-4 text-center text-muted-foreground">
                 <p className="text-sm">No contacts available</p>
-                {(currentUserRole === 'teacher' || currentUserRole === 'admin') && (
-                  <p className="text-xs mt-1">Use + to start a new conversation</p>
-                )}
+                <p className="text-xs mt-1">Use + to start a new conversation</p>
               </div>
             ) : (
               <div className="space-y-1 p-2">
