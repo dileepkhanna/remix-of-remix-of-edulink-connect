@@ -164,7 +164,7 @@ export default function TeacherDashboard() {
 
   return (
     <DashboardLayout sidebarItems={teacherSidebarItems} roleColor="teacher">
-      <div className="space-y-6 animate-fade-in" style={{ '--primary': '186 100% 20%', '--gradient-primary': 'linear-gradient(135deg, #005a66, #007a8a)' } as React.CSSProperties}>
+      <div className="space-y-6 animate-fade-in">
         {/* Welcome Section */}
         <div className="rounded-2xl p-6 text-white" style={{ background: 'linear-gradient(135deg, #005a66, #007a8a)' }}>
           <h1 className="font-display text-2xl font-bold">Good Morning, {profileName}!</h1>
