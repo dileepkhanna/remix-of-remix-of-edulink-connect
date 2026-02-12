@@ -26,6 +26,7 @@ import {
   ClipboardList,
   Plus,
   CalendarDays,
+  Paperclip,
 } from 'lucide-react';
 
 // Sidebar items from shared config with permission check
@@ -93,13 +94,28 @@ export default function TeacherLeave() {
     fetchData();
   }, [user]);
 
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = async () => {
     if (!formData.from_date || !formData.to_date || !formData.reason) {
       toast.error('Please fill in all fields');
       return;
     }
 
+    setIsSubmitting(true);
     try {
+      let attachmentUrl: string | null = null;
+
+      if (attachmentFile) {
+        const fileExt = attachmentFile.name.split('.').pop();
+        const filePath = `leave-docs/${user!.id}/${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from('photos').upload(filePath, attachmentFile);
+        if (uploadError) { toast.error(uploadError.message); setIsSubmitting(false); return; }
+        const { data: urlData } = supabase.storage.from('photos').getPublicUrl(filePath);
+        attachmentUrl = urlData.publicUrl;
+      }
+
       const { error } = await supabase.from('leave_requests').insert({
         teacher_id: teacherId,
         from_date: formData.from_date,
@@ -107,6 +123,7 @@ export default function TeacherLeave() {
         reason: formData.reason,
         request_type: 'teacher',
         status: 'pending',
+        attachment_url: attachmentUrl,
       });
 
       if (error) throw error;
@@ -114,8 +131,8 @@ export default function TeacherLeave() {
       toast.success('Leave request submitted successfully');
       setDialogOpen(false);
       setFormData({ from_date: format(new Date(), 'yyyy-MM-dd'), to_date: format(new Date(), 'yyyy-MM-dd'), reason: '' });
+      setAttachmentFile(null);
       
-      // Refresh
       const { data: leaveData } = await supabase
         .from('leave_requests')
         .select('*')
@@ -126,6 +143,8 @@ export default function TeacherLeave() {
     } catch (error) {
       console.error('Error submitting leave request:', error);
       toast.error('Failed to submit leave request');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -187,7 +206,13 @@ export default function TeacherLeave() {
                     rows={4}
                   />
                 </div>
-                <Button onClick={handleSubmit} className="w-full">
+                <div>
+                  <Label>Attachment (Optional)</Label>
+                  <Input type="file" accept="image/*,.pdf,.doc,.docx" onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)} />
+                  <p className="text-xs text-muted-foreground mt-1">Upload a document or image (optional)</p>
+                </div>
+                <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full">
+                  {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Submit Request
                 </Button>
               </div>
@@ -223,6 +248,11 @@ export default function TeacherLeave() {
                         </span>
                       </div>
                       <p className="text-sm text-muted-foreground">{leave.reason}</p>
+                      {(leave as any).attachment_url && (
+                        <a href={(leave as any).attachment_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-1">
+                          <Paperclip className="h-3 w-3" /> View Attachment
+                        </a>
+                      )}
                       <p className="text-xs text-muted-foreground mt-2">
                         Submitted: {format(new Date(leave.created_at), 'PPP')}
                       </p>

@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Search, CheckCircle, XCircle, Clock, Calendar } from 'lucide-react';
+import { Loader2, Search, CheckCircle, XCircle, Clock, Calendar, Download, Paperclip } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import StatCard from '@/components/StatCard';
 import { BackButton } from '@/components/ui/back-button';
@@ -193,6 +193,7 @@ export default function LeaveManagement() {
                       <TableHead>Requester</TableHead>
                       <TableHead>Duration</TableHead>
                       <TableHead>Reason</TableHead>
+                      <TableHead>Attachment</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -215,6 +216,15 @@ export default function LeaveManagement() {
                           </div>
                         </TableCell>
                         <TableCell className="max-w-xs truncate">{request.reason}</TableCell>
+                        <TableCell>
+                          {(request as any).attachment_url ? (
+                            <a href={(request as any).attachment_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline text-sm">
+                              <Download className="h-3 w-3" /> Download
+                            </a>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">—</span>
+                          )}
+                        </TableCell>
                         <TableCell>{getStatusBadge(request.status)}</TableCell>
                         <TableCell>
                           {request.status === 'pending' && (
