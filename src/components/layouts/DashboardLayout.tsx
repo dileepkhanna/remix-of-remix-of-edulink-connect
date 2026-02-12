@@ -217,7 +217,9 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
         {/* Logo */}
         <div className="h-16 flex items-center px-3 border-b border-sidebar-border">
           <div className={cn("flex items-center gap-2 min-w-0", !sidebarOpen && "justify-center w-full")}>
-            <img src="/ase-logo.jpg" alt="ASE Tech Logo" className="h-9 w-auto flex-shrink-0 rounded object-contain" />
+            <div className="h-9 w-9 flex-shrink-0 rounded-lg bg-primary/10 flex items-center justify-center">
+              <GraduationCap className="h-5 w-5 text-primary" />
+            </div>
             {sidebarOpen && (
               <div className="min-w-0">
                 <h1 className="font-display font-bold text-base leading-tight truncate">SmartEduConnect</h1>
@@ -298,7 +300,9 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
       >
         <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border flex-shrink-0">
           <div className="flex items-center gap-2 min-w-0">
-            <img src="/ase-logo.jpg" alt="ASE Tech Logo" className="h-9 w-auto flex-shrink-0 rounded object-contain" />
+            <div className="h-9 w-9 flex-shrink-0 rounded-lg bg-primary/10 flex items-center justify-center">
+              <GraduationCap className="h-5 w-5 text-primary" />
+            </div>
             <div className="min-w-0">
               <h1 className="font-display font-bold text-base leading-tight truncate">SmartEduConnect</h1>
               <p className="text-[10px] text-sidebar-foreground/60 truncate">{roleLabel}</p>

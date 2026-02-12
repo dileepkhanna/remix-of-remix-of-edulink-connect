@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, User, Loader2, Users, IdCard, Briefcase, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, User, Loader2, Users, IdCard, Briefcase, ShieldCheck, GraduationCap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const staffLoginSchema = z.object({
@@ -289,8 +289,8 @@ export default function Auth() {
       <div className="w-full max-w-md animate-fade-in">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center mb-4">
-            <img src="/ase-logo.jpg" alt="ASE Tech Logo" className="h-20 w-auto object-contain" />
+          <div className="inline-flex items-center justify-center h-20 w-20 rounded-2xl bg-primary/10 mb-4">
+            <GraduationCap className="h-10 w-10 text-primary" />
           </div>
           <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground">SmartEduConnect</h1>
           <p className="text-muted-foreground mt-1 text-sm sm:text-base">School Management System</p>
