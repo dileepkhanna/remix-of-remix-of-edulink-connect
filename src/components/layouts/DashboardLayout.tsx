@@ -4,6 +4,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +26,12 @@ import {
   User,
   Bell,
   ChevronRight,
+  Mail,
+  Phone,
+  Calendar,
+  BookOpen,
+  GraduationCap,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -34,11 +47,31 @@ interface DashboardLayoutProps {
   roleColor: 'admin' | 'teacher' | 'parent';
 }
 
+interface ProfileDetails {
+  full_name: string;
+  email: string;
+  phone: string;
+  photo_url: string;
+  role: string;
+  // Teacher-specific
+  teacherId?: string;
+  qualification?: string;
+  subjects?: string[];
+  joiningDate?: string;
+  status?: string;
+  assignedClasses?: string[];
+  // Parent-specific
+  childrenNames?: string[];
+}
+
 export default function DashboardLayout({ children, sidebarItems, roleColor }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [displayName, setDisplayName] = useState<string>('');
   const [photoUrl, setPhotoUrl] = useState<string>('');
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileDetails, setProfileDetails] = useState<ProfileDetails | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
   const { user, userRole, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -64,6 +97,79 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
+  };
+
+  const openProfile = async () => {
+    if (!user) return;
+    setProfileOpen(true);
+    setLoadingProfile(true);
+
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, email, phone, photo_url')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const details: ProfileDetails = {
+        full_name: profile?.full_name || '',
+        email: profile?.email || user.email || '',
+        phone: profile?.phone || '',
+        photo_url: profile?.photo_url || '',
+        role: userRole || '',
+      };
+
+      if (userRole === 'teacher') {
+        const { data: teacher } = await supabase
+          .from('teachers')
+          .select('teacher_id, qualification, subjects, joining_date, status')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (teacher) {
+          details.teacherId = teacher.teacher_id;
+          details.qualification = teacher.qualification || '';
+          details.subjects = teacher.subjects || [];
+          details.joiningDate = teacher.joining_date || '';
+          details.status = teacher.status || '';
+
+          const { data: tc } = await supabase
+            .from('teacher_classes')
+            .select('classes(name, section)')
+            .eq('teacher_id', (await supabase.from('teachers').select('id').eq('user_id', user.id).maybeSingle()).data?.id || '');
+
+          if (tc) {
+            details.assignedClasses = tc.map((t: any) => `${t.classes?.name} - ${t.classes?.section}`);
+          }
+        }
+      }
+
+      if (userRole === 'parent') {
+        const { data: parent } = await supabase
+          .from('parents')
+          .select('id, phone')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (parent) {
+          details.phone = parent.phone || details.phone;
+          const { data: links } = await supabase
+            .from('student_parents')
+            .select('students(full_name)')
+            .eq('parent_id', parent.id);
+
+          if (links) {
+            details.childrenNames = links.map((l: any) => l.students?.full_name).filter(Boolean);
+          }
+        }
+      }
+
+      setProfileDetails(details);
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    } finally {
+      setLoadingProfile(false);
+    }
   };
 
   const roleGradient = {
@@ -233,6 +339,11 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Name always visible */}
+            <span className="hidden md:block text-sm font-medium text-foreground">
+              {displayName || 'User'}
+            </span>
+
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />
@@ -253,7 +364,7 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={openProfile}>
                   <User className="mr-2 h-4 w-4" />
                   Profile
                 </DropdownMenuItem>
@@ -279,6 +390,122 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
           {children}
         </main>
       </div>
+
+      {/* Profile Dialog */}
+      <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display">My Profile</DialogTitle>
+          </DialogHeader>
+
+          {loadingProfile ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          ) : profileDetails ? (
+            <div className="space-y-6">
+              {/* Avatar & Name */}
+              <div className="flex flex-col items-center gap-3">
+                <Avatar className="h-20 w-20">
+                  <AvatarImage src={profileDetails.photo_url} />
+                  <AvatarFallback className={cn(roleGradient, "text-xl")}>
+                    {profileDetails.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="text-center">
+                  <h3 className="font-display text-xl font-bold">{profileDetails.full_name}</h3>
+                  <Badge className={cn("mt-1", `btn-role-${roleColor}`)}>
+                    <Shield className="h-3 w-3 mr-1" />
+                    {roleLabel}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Basic Info */}
+              <div className="space-y-3 bg-muted/50 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{profileDetails.email || 'Not set'}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{profileDetails.phone || 'Not set'}</span>
+                </div>
+              </div>
+
+              {/* Teacher-specific details */}
+              {userRole === 'teacher' && (
+                <div className="space-y-3 bg-muted/50 rounded-xl p-4">
+                  <h4 className="font-display font-semibold text-sm text-muted-foreground uppercase tracking-wider">Teacher Details</h4>
+                  {profileDetails.teacherId && (
+                    <div className="flex items-center gap-3">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">ID: {profileDetails.teacherId}</span>
+                    </div>
+                  )}
+                  {profileDetails.qualification && (
+                    <div className="flex items-center gap-3">
+                      <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{profileDetails.qualification}</span>
+                    </div>
+                  )}
+                  {profileDetails.joiningDate && (
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">Joined: {new Date(profileDetails.joiningDate).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                  {profileDetails.subjects && profileDetails.subjects.length > 0 && (
+                    <div className="flex items-start gap-3">
+                      <BookOpen className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex flex-wrap gap-1">
+                        {profileDetails.subjects.map((s, i) => (
+                          <Badge key={i} variant="secondary" className="text-xs">{s}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {profileDetails.assignedClasses && profileDetails.assignedClasses.length > 0 && (
+                    <div className="flex items-start gap-3">
+                      <GraduationCap className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex flex-wrap gap-1">
+                        {profileDetails.assignedClasses.map((c, i) => (
+                          <Badge key={i} variant="outline" className="text-xs">{c}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {profileDetails.status && (
+                    <Badge className={profileDetails.status === 'active' ? 'status-active' : 'status-inactive'}>
+                      {profileDetails.status}
+                    </Badge>
+                  )}
+                </div>
+              )}
+
+              {/* Parent-specific details */}
+              {userRole === 'parent' && profileDetails.childrenNames && profileDetails.childrenNames.length > 0 && (
+                <div className="space-y-3 bg-muted/50 rounded-xl p-4">
+                  <h4 className="font-display font-semibold text-sm text-muted-foreground uppercase tracking-wider">Children</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {profileDetails.childrenNames.map((name, i) => (
+                      <Badge key={i} variant="secondary">{name}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Admin-specific */}
+              {userRole === 'admin' && (
+                <div className="space-y-3 bg-muted/50 rounded-xl p-4">
+                  <h4 className="font-display font-semibold text-sm text-muted-foreground uppercase tracking-wider">Role Info</h4>
+                  <p className="text-sm text-muted-foreground">Full system access with administrative privileges.</p>
+                </div>
+              )}
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
