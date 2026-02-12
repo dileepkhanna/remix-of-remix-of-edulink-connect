@@ -236,13 +236,11 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
 
   const loadAdminUser = async () => {
     try {
-      const { data: adminRoles } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'admin');
+      // Use security definer function to get admin user IDs (bypasses RLS)
+      const { data: adminIds } = await supabase.rpc('get_admin_user_ids');
 
-      if (adminRoles && adminRoles.length > 0) {
-        const adminUserId = adminRoles[0].user_id;
+      if (adminIds && adminIds.length > 0) {
+        const adminUserId = adminIds[0];
         const { data: profile } = await supabase
           .from('profiles')
           .select('full_name, photo_url')
