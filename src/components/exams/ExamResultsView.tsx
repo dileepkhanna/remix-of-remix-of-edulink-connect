@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, Search, Download, FileSpreadsheet, Users, Award, BarChart3, TrendingUp, TrendingDown, BookOpen } from 'lucide-react';
+import { Loader2, Search, Download, FileSpreadsheet, Users, Award, BarChart3, TrendingUp, TrendingDown, BookOpen, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -134,6 +134,34 @@ export default function ExamResultsView() {
     toast.success('Results exported');
   };
 
+  const handlePDFDownload = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) { toast.error('Please allow popups to download PDF'); return; }
+    const rows = filteredResults.map(r => {
+      const pct = r.marks_obtained && r.exams?.max_marks ? ((r.marks_obtained / r.exams.max_marks) * 100).toFixed(0) : '0';
+      return `<tr><td>${r.students?.full_name || '-'}</td><td>${r.students?.admission_number || '-'}</td><td>${r.exams?.name || '-'}</td><td>${r.exams?.subjects?.name || '-'}</td><td>${r.marks_obtained ?? '-'}/${r.exams?.max_marks ?? 100}</td><td>${pct}%</td><td>${r.grade || '-'}</td></tr>`;
+    }).join('');
+    printWindow.document.write(`
+      <html><head><title>Exam Results</title>
+      <style>
+        body { font-family: 'Inter', Arial, sans-serif; padding: 20px; color: #333; }
+        h1 { font-size: 20px; margin-bottom: 8px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+        th { background: #f5f5f5; font-weight: 600; }
+        .meta { color: #888; font-size: 12px; margin-bottom: 16px; }
+        @media print { body { padding: 0; } }
+      </style></head><body>
+      <h1>Exam Results Report</h1>
+      <p class="meta">Generated on ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} • ${filteredResults.length} records</p>
+      <table><thead><tr><th>Student</th><th>Adm No</th><th>Exam</th><th>Subject</th><th>Marks</th><th>%</th><th>Grade</th></tr></thead><tbody>${rows}</tbody></table>
+      </body></html>
+    `);
+    printWindow.document.close();
+    setTimeout(() => { printWindow.print(); }, 300);
+    toast.success('PDF download initiated');
+  };
+
   if (loading) {
     return <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
@@ -178,7 +206,10 @@ export default function ExamResultsView() {
               <Button variant={viewMode === 'report' ? 'default' : 'outline'} className="h-10" onClick={() => setViewMode('report')} disabled={selectedStudent === 'all'}>
                 <Award className="h-4 w-4 mr-1" /> Report Card
               </Button>
-              <Button variant="outline" size="icon" className="h-10 w-10" onClick={handleExport} disabled={filteredResults.length === 0}>
+              <Button variant="outline" size="icon" className="h-10 w-10" onClick={handlePDFDownload} disabled={filteredResults.length === 0} title="Download PDF">
+                <FileText className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-10 w-10" onClick={handleExport} disabled={filteredResults.length === 0} title="Export Excel">
                 <Download className="h-4 w-4" />
               </Button>
             </div>
