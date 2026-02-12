@@ -73,6 +73,8 @@ export default function TeacherHomework() {
     class_id: '',
     subject_id: '',
   });
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'teacher')) {
@@ -156,6 +158,20 @@ export default function TeacherHomework() {
     }
 
     try {
+      setUploading(true);
+      let attachment_url: string | null = null;
+
+      if (attachmentFile) {
+        const fileExt = attachmentFile.name.split('.').pop();
+        const filePath = `homework/${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('photos')
+          .upload(filePath, attachmentFile);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from('photos').getPublicUrl(filePath);
+        attachment_url = urlData.publicUrl;
+      }
+
       const { error } = await supabase.from('homework').insert({
         title: formData.title,
         description: formData.description || null,
@@ -163,6 +179,7 @@ export default function TeacherHomework() {
         class_id: formData.class_id,
         subject_id: formData.subject_id || null,
         created_by: teacherId,
+        attachment_url,
       });
 
       if (error) throw error;
@@ -170,6 +187,7 @@ export default function TeacherHomework() {
       toast.success('Homework assigned successfully');
       setDialogOpen(false);
       setFormData({ title: '', description: '', due_date: format(new Date(), 'yyyy-MM-dd'), class_id: '', subject_id: '' });
+      setAttachmentFile(null);
       
       // Refresh homework list
       const classIds = classes.map(c => c.id);
@@ -182,6 +200,8 @@ export default function TeacherHomework() {
     } catch (error) {
       console.error('Error creating homework:', error);
       toast.error('Failed to assign homework');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -279,8 +299,16 @@ export default function TeacherHomework() {
                     onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                   />
                 </div>
-                <Button onClick={handleSubmit} className="w-full">
-                  Assign Homework
+                <div>
+                  <Label>Attachment (optional)</Label>
+                  <Input
+                    type="file"
+                    onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)}
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  />
+                </div>
+                <Button onClick={handleSubmit} className="w-full" disabled={uploading}>
+                  {uploading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Uploading...</> : 'Assign Homework'}
                 </Button>
               </div>
             </DialogContent>
