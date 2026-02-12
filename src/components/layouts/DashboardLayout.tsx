@@ -204,11 +204,11 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
   };
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className="h-screen flex w-full bg-background overflow-hidden">
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          "hidden lg:flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out overflow-hidden relative",
+          "hidden lg:flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out overflow-hidden relative h-screen flex-shrink-0",
           sidebarOpen ? "w-64" : "w-20",
           roleColor === 'teacher' && "sidebar-teacher",
           roleColor === 'parent' && "sidebar-parent"
@@ -339,7 +339,7 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* Header */}
         <header className="h-16 bg-card border-b flex items-center justify-between px-4 lg:px-6">
           <div className="flex items-center gap-4">
