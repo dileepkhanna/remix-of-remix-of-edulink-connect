@@ -63,7 +63,7 @@
     /* Role-specific colors — from ASE Tech logo */
     --admin: 210 85% 40%;
     --admin-foreground: 0 0% 100%;
-    --teacher: 4 78% 50%;
+    --teacher: 186 100% 20%;
     --teacher-foreground: 0 0% 100%;
     --parent: 145 60% 38%;
     --parent-foreground: 0 0% 100%;
@@ -75,7 +75,7 @@
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(210 85% 40%), hsl(210 75% 50%));
     --gradient-admin: linear-gradient(135deg, hsl(210 85% 40%), hsl(210 70% 32%));
-    --gradient-teacher: linear-gradient(135deg, hsl(4 78% 50%), hsl(4 70% 58%));
+    --gradient-teacher: linear-gradient(135deg, hsl(186 100% 20%), hsl(186 80% 28%));
     --gradient-parent: linear-gradient(135deg, hsl(145 60% 38%), hsl(145 50% 46%));
     --gradient-card: linear-gradient(145deg, hsl(30 10% 100%), hsl(30 12% 96%));
 
