@@ -91,7 +91,8 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
       <aside
         className={cn(
           "hidden lg:flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out overflow-hidden relative",
-          sidebarOpen ? "w-64" : "w-20"
+          sidebarOpen ? "w-64" : "w-20",
+          roleColor === 'teacher' && "sidebar-teacher"
         )}
       >
         {/* Logo */}
@@ -171,7 +172,8 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
       <aside
         className={cn(
           "fixed left-0 top-0 bottom-0 w-64 bg-sidebar text-sidebar-foreground z-50 transform transition-transform duration-300 lg:hidden flex flex-col",
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full",
+          roleColor === 'teacher' && "sidebar-teacher"
         )}
       >
         <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border flex-shrink-0">

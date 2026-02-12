@@ -147,6 +147,17 @@
 }
 
 @layer components {
+  .sidebar-teacher {
+    --sidebar-background: 186 100% 20%;
+    --sidebar-foreground: 180 15% 95%;
+    --sidebar-primary: 180 60% 65%;
+    --sidebar-primary-foreground: 186 100% 12%;
+    --sidebar-accent: 186 60% 26%;
+    --sidebar-accent-foreground: 180 15% 95%;
+    --sidebar-border: 186 50% 24%;
+    --sidebar-ring: 180 60% 65%;
+  }
+
   .card-elevated {
     @apply bg-card rounded-xl border shadow-md hover:shadow-lg transition-all duration-300;
   }
