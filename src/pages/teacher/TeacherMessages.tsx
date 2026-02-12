@@ -30,7 +30,7 @@ export default function TeacherMessages() {
       <div className="space-y-6 animate-fade-in">
         <div>
           <h1 className="font-display text-2xl font-bold">Messages</h1>
-          <p className="text-muted-foreground">Communicate with parents of your students</p>
+          <p className="text-muted-foreground">Communicate with parents and admin</p>
         </div>
 
         {user && (
