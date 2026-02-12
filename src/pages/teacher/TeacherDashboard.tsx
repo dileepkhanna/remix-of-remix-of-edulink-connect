@@ -166,7 +166,7 @@ export default function TeacherDashboard() {
     <DashboardLayout sidebarItems={teacherSidebarItems} roleColor="teacher">
       <div className="space-y-6 animate-fade-in">
         {/* Welcome Section */}
-        <div className="gradient-teacher rounded-2xl p-6 text-white">
+        <div className="rounded-2xl p-6 text-white" style={{ background: 'linear-gradient(135deg, #005a66, #007a8a)' }}>
           <h1 className="font-display text-2xl font-bold">Good Morning, {profileName}!</h1>
           <p className="text-white/80 mt-1">Ready for another day of inspiring young minds.</p>
         </div>
@@ -201,7 +201,7 @@ export default function TeacherDashboard() {
           <Card className="card-elevated">
             <CardHeader>
               <CardTitle className="font-display flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-secondary" />
+                <Calendar className="h-5 w-5 text-[#005a66]" />
                 Today's Schedule
               </CardTitle>
             </CardHeader>
@@ -228,7 +228,7 @@ export default function TeacherDashboard() {
                           {schedule.classes ? `Class ${schedule.classes.name} - ${schedule.classes.section}` : 'Class'}
                         </p>
                       </div>
-                      <div className="w-2 h-2 rounded-full bg-secondary" />
+                      <div className="w-2 h-2 rounded-full bg-[#005a66]" />
                     </div>
                   ))}
                 </div>
@@ -239,7 +239,7 @@ export default function TeacherDashboard() {
           <Card className="card-elevated">
             <CardHeader>
               <CardTitle className="font-display flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-secondary" />
+                <AlertCircle className="h-5 w-5 text-[#005a66]" />
                 Quick Actions
               </CardTitle>
             </CardHeader>
@@ -256,7 +256,7 @@ export default function TeacherDashboard() {
                   <button
                     key={index}
                     onClick={() => navigate(action.path)}
-                    className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted/50 hover:bg-secondary/10 hover:text-secondary transition-colors"
+                    className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted/50 hover:bg-[#005a66]/10 hover:text-[#005a66] transition-colors"
                   >
                     {action.icon}
                     <span className="text-sm font-medium text-center">{action.label}</span>
