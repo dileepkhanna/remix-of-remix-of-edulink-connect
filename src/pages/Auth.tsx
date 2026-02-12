@@ -292,7 +292,7 @@ export default function Auth() {
           <div className="inline-flex items-center justify-center mb-4">
             <img src="/ase-logo.jpg" alt="ASE Tech Logo" className="h-20 w-auto object-contain" />
           </div>
-          <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground">Smart_Educonnect</h1>
+          <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground">SmartEduConnect</h1>
           <p className="text-muted-foreground mt-1 text-sm sm:text-base">School Management System</p>
         </div>
 
@@ -305,7 +305,7 @@ export default function Auth() {
                 <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
                   <ShieldCheck className="h-6 w-6 text-primary" />
                 </div>
-                <CardTitle className="font-display text-xl">Welcome to Smart_Educonnect</CardTitle>
+                <CardTitle className="font-display text-xl">Welcome to SmartEduConnect</CardTitle>
                 <CardDescription>Create the first admin account to get started</CardDescription>
               </CardHeader>
               <CardContent>

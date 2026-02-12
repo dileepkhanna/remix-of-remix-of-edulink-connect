@@ -95,13 +95,13 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
         )}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
-          <div className={cn("flex items-center gap-3", !sidebarOpen && "justify-center w-full")}>
-            <img src="/ase-logo.jpg" alt="ASE Tech Logo" className="h-10 w-auto rounded-lg object-contain" />
+        <div className="h-16 flex items-center px-3 border-b border-sidebar-border">
+          <div className={cn("flex items-center gap-2 min-w-0", !sidebarOpen && "justify-center w-full")}>
+            <img src="/ase-logo.jpg" alt="ASE Tech Logo" className="h-9 w-auto flex-shrink-0 rounded object-contain" />
             {sidebarOpen && (
-              <div>
-                <h1 className="font-display font-bold text-lg">Smart_Educonnect</h1>
-                <p className="text-xs text-sidebar-foreground/60">{roleLabel}</p>
+              <div className="min-w-0">
+                <h1 className="font-display font-bold text-base leading-tight truncate">SmartEduConnect</h1>
+                <p className="text-[10px] text-sidebar-foreground/60 truncate">{roleLabel}</p>
               </div>
             )}
           </div>
@@ -175,11 +175,11 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
         )}
       >
         <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <img src="/ase-logo.jpg" alt="ASE Tech Logo" className="h-10 w-auto rounded-lg object-contain" />
-            <div>
-              <h1 className="font-display font-bold text-lg">Smart_Educonnect</h1>
-              <p className="text-xs text-sidebar-foreground/60">{roleLabel}</p>
+          <div className="flex items-center gap-2 min-w-0">
+            <img src="/ase-logo.jpg" alt="ASE Tech Logo" className="h-9 w-auto flex-shrink-0 rounded object-contain" />
+            <div className="min-w-0">
+              <h1 className="font-display font-bold text-base leading-tight truncate">SmartEduConnect</h1>
+              <p className="text-[10px] text-sidebar-foreground/60 truncate">{roleLabel}</p>
             </div>
           </div>
           <button onClick={() => setMobileMenuOpen(false)}>

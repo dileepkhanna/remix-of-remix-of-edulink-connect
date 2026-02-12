@@ -151,7 +151,7 @@ export function downloadAttendancePDF(
         </tbody>
       </table>
       <div class="footer">
-        <p>Generated on ${format(new Date(), 'PPP')} | Smart_Educonnect</p>
+        <p>Generated on ${format(new Date(), 'PPP')} | SmartEduConnect</p>
       </div>
     </body>
     </html>
