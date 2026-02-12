@@ -1,8 +1,10 @@
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -32,8 +34,13 @@ import {
   BookOpen,
   GraduationCap,
   Shield,
+  Camera,
+  Pencil,
+  Save,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface SidebarItem {
   icon: ReactNode;
@@ -72,6 +79,11 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileDetails, setProfileDetails] = useState<ProfileDetails | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [editPhone, setEditPhone] = useState('');
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { user, userRole, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -198,7 +210,8 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
         className={cn(
           "hidden lg:flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out overflow-hidden relative",
           sidebarOpen ? "w-64" : "w-20",
-          roleColor === 'teacher' && "sidebar-teacher"
+          roleColor === 'teacher' && "sidebar-teacher",
+          roleColor === 'parent' && "sidebar-parent"
         )}
       >
         {/* Logo */}
@@ -279,7 +292,8 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
         className={cn(
           "fixed left-0 top-0 bottom-0 w-64 bg-sidebar text-sidebar-foreground z-50 transform transition-transform duration-300 lg:hidden flex flex-col",
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full",
-          roleColor === 'teacher' && "sidebar-teacher"
+          roleColor === 'teacher' && "sidebar-teacher",
+          roleColor === 'parent' && "sidebar-parent"
         )}
       >
         <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border flex-shrink-0">
@@ -380,6 +394,10 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
             '--primary': '152 35% 16%',
             '--primary-foreground': '0 0% 100%',
             '--ring': '152 35% 16%',
+          } as React.CSSProperties : roleColor === 'parent' ? {
+            '--primary': '210 8% 45%',
+            '--primary-foreground': '0 0% 100%',
+            '--ring': '210 8% 45%',
           } as React.CSSProperties : undefined}
         >
           {children}
@@ -387,11 +405,40 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
       </div>
 
       {/* Profile Dialog */}
-      <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
+      <Dialog open={profileOpen} onOpenChange={(open) => { setProfileOpen(open); if (!open) setEditingProfile(false); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-display">My Profile</DialogTitle>
+            <DialogTitle className="font-display flex items-center justify-between">
+              My Profile
+              {profileDetails && !editingProfile && (
+                <Button variant="ghost" size="sm" onClick={() => { setEditingProfile(true); setEditPhone(profileDetails.phone || ''); }}>
+                  <Pencil className="h-4 w-4 mr-1" /> Edit
+                </Button>
+              )}
+            </DialogTitle>
           </DialogHeader>
+
+          <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file || !user) return;
+            setUploadingPhoto(true);
+            try {
+              const ext = file.name.split('.').pop();
+              const path = `${user.id}/avatar.${ext}`;
+              const { error: uploadErr } = await supabase.storage.from('photos').upload(path, file, { upsert: true });
+              if (uploadErr) throw uploadErr;
+              const { data: urlData } = supabase.storage.from('photos').getPublicUrl(path);
+              const photoUrlNew = `${urlData.publicUrl}?t=${Date.now()}`;
+              await supabase.from('profiles').update({ photo_url: photoUrlNew }).eq('user_id', user.id);
+              setPhotoUrl(photoUrlNew);
+              if (profileDetails) setProfileDetails({ ...profileDetails, photo_url: photoUrlNew });
+              toast.success('Photo updated');
+            } catch (err: any) {
+              toast.error(err.message || 'Failed to upload photo');
+            } finally {
+              setUploadingPhoto(false);
+            }
+          }} />
 
           {loadingProfile ? (
             <div className="flex items-center justify-center py-8">
@@ -401,12 +448,21 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
             <div className="space-y-6">
               {/* Avatar & Name */}
               <div className="flex flex-col items-center gap-3">
-                <Avatar className="h-20 w-20">
-                  <AvatarImage src={profileDetails.photo_url} />
-                  <AvatarFallback className={cn(roleGradient, "text-xl")}>
-                    {profileDetails.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="relative">
+                  <Avatar className="h-20 w-20">
+                    <AvatarImage src={profileDetails.photo_url} />
+                    <AvatarFallback className={cn(roleGradient, "text-xl")}>
+                      {profileDetails.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingPhoto}
+                    className="absolute bottom-0 right-0 h-7 w-7 bg-primary text-primary-foreground rounded-full flex items-center justify-center shadow-md hover:bg-primary/90 transition-colors"
+                  >
+                    {uploadingPhoto ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
                 <div className="text-center">
                   <h3 className="font-display text-xl font-bold">{profileDetails.full_name}</h3>
                   <Badge className={cn("mt-1", `btn-role-${roleColor}`)}>
@@ -422,10 +478,35 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
                   <Mail className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">{profileDetails.email || 'Not set'}</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{profileDetails.phone || 'Not set'}</span>
-                </div>
+                {editingProfile ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-phone" className="text-xs text-muted-foreground">Phone Number</Label>
+                    <div className="flex gap-2">
+                      <Input id="edit-phone" value={editPhone} onChange={e => setEditPhone(e.target.value)} placeholder="Enter phone number" />
+                      <Button size="sm" disabled={savingProfile} onClick={async () => {
+                        if (!user) return;
+                        setSavingProfile(true);
+                        try {
+                          await supabase.from('profiles').update({ phone: editPhone }).eq('user_id', user.id);
+                          setProfileDetails({ ...profileDetails, phone: editPhone });
+                          setEditingProfile(false);
+                          toast.success('Phone number updated');
+                        } catch {
+                          toast.error('Failed to update');
+                        } finally {
+                          setSavingProfile(false);
+                        }
+                      }}>
+                        {savingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">{profileDetails.phone || 'Not set'}</span>
+                  </div>
+                )}
               </div>
 
               {/* Teacher-specific details */}
