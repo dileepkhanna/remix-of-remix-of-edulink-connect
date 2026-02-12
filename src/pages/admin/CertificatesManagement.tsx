@@ -6,7 +6,7 @@ import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Award, CheckCircle2, XCircle, Clock, FileText } from 'lucide-react';
+import { Loader2, Award, CheckCircle2, XCircle, Clock, FileText, Download } from 'lucide-react';
 import { adminSidebarItems } from '@/config/adminSidebar';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -208,6 +208,11 @@ export default function CertificatesManagement() {
                                 <p className="text-xs text-muted-foreground mt-1">
                                   Requested by: {request.requester_name || 'Parent'} • {new Date(request.created_at).toLocaleDateString()}
                                 </p>
+                                {(request as any).attachment_url && (
+                                  <a href={(request as any).attachment_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-1">
+                                    <Download className="h-3 w-3" /> Download Attachment
+                                  </a>
+                                )}
                               </div>
                             </div>
                             

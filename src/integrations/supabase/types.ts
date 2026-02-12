@@ -119,6 +119,7 @@ export type Database = {
       certificate_requests: {
         Row: {
           approved_by: string | null
+          attachment_url: string | null
           certificate_type: string
           created_at: string | null
           id: string
@@ -128,6 +129,7 @@ export type Database = {
         }
         Insert: {
           approved_by?: string | null
+          attachment_url?: string | null
           certificate_type: string
           created_at?: string | null
           id?: string
@@ -137,6 +139,7 @@ export type Database = {
         }
         Update: {
           approved_by?: string | null
+          attachment_url?: string | null
           certificate_type?: string
           created_at?: string | null
           id?: string
