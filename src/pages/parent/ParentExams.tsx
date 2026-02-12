@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { parentSidebarItems } from '@/config/parentSidebar';
 import StudentProgressView from '@/components/exams/StudentProgressView';
 import { BackButton } from '@/components/ui/back-button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ExamMark {
   id: string;
@@ -27,6 +28,7 @@ export default function ParentExams() {
   const [marks, setMarks] = useState<ExamMark[]>([]);
   const [childName, setChildName] = useState('');
   const [loadingData, setLoadingData] = useState(true);
+  const [selectedExam, setSelectedExam] = useState('all');
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'parent')) {
@@ -69,6 +71,16 @@ export default function ParentExams() {
     fetchMarks();
   }, [user]);
 
+  const examNames = useMemo(() => 
+    [...new Set(marks.map(m => m.exams?.name).filter(Boolean))] as string[],
+    [marks]
+  );
+
+  const filteredMarks = useMemo(() => {
+    if (selectedExam === 'all') return marks;
+    return marks.filter(m => m.exams?.name === selectedExam);
+  }, [marks, selectedExam]);
+
   if (loading || loadingData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -81,12 +93,27 @@ export default function ParentExams() {
     <DashboardLayout sidebarItems={parentSidebarItems} roleColor="parent">
       <div className="space-y-6 animate-fade-in">
         <BackButton to="/parent" />
-        <div>
-          <h1 className="font-display text-2xl font-bold">Exam Results</h1>
-          <p className="text-muted-foreground">{childName}'s examination performance</p>
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="font-display text-2xl font-bold">Exam Results</h1>
+            <p className="text-muted-foreground">{childName}'s examination performance</p>
+          </div>
+          {examNames.length > 1 && (
+            <Select value={selectedExam} onValueChange={setSelectedExam}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by Exam" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Exams</SelectItem>
+                {examNames.map(name => (
+                  <SelectItem key={name} value={name}>{name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
-        <StudentProgressView marks={marks} studentName={childName} showAnalytics={true} />
+        <StudentProgressView marks={filteredMarks} studentName={childName} showAnalytics={true} />
       </div>
     </DashboardLayout>
   );

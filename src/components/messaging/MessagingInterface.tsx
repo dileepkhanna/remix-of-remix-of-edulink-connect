@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Send, Loader2, MessageCircle, Check, CheckCheck, Plus, Crown, UserCheck } from 'lucide-react';
+import { Send, Loader2, MessageCircle, Check, CheckCheck, Plus, Crown, UserCheck, Paperclip, Image, Download, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Message {
@@ -19,6 +19,8 @@ interface Message {
   content: string;
   is_read: boolean;
   created_at: string;
+  attachment_url?: string | null;
+  attachment_type?: string | null;
 }
 
 interface Contact {
@@ -67,7 +69,10 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Class/Student selection for teachers and admins
   const [showNewMessage, setShowNewMessage] = useState(false);
@@ -674,15 +679,32 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedContact) return;
+    if ((!newMessage.trim() && !attachmentFile) || !selectedContact) return;
     
     setSending(true);
     try {
+      let attachmentUrl: string | null = null;
+      let attachmentType: string | null = null;
+
+      if (attachmentFile) {
+        setUploading(true);
+        const fileExt = attachmentFile.name.split('.').pop();
+        const filePath = `message-attachments/${currentUserId}/${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from('photos').upload(filePath, attachmentFile);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from('photos').getPublicUrl(filePath);
+        attachmentUrl = urlData.publicUrl;
+        attachmentType = attachmentFile.type.startsWith('image/') ? 'image' : 'document';
+        setUploading(false);
+      }
+
       const { error } = await supabase.from('messages').insert({
         sender_id: currentUserId,
         recipient_id: selectedContact.id,
         student_id: selectedContact.studentId || null,
-        content: newMessage.trim(),
+        content: newMessage.trim() || (attachmentType === 'image' ? '📷 Image' : '📎 Document'),
+        attachment_url: attachmentUrl,
+        attachment_type: attachmentType,
       });
 
       if (error) throw error;
@@ -692,15 +714,19 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
         sender_id: currentUserId,
         recipient_id: selectedContact.id,
         student_id: selectedContact.studentId || null,
-        content: newMessage.trim(),
+        content: newMessage.trim() || (attachmentType === 'image' ? '📷 Image' : '📎 Document'),
         is_read: false,
         created_at: new Date().toISOString(),
+        attachment_url: attachmentUrl,
+        attachment_type: attachmentType,
       };
       setMessages(prev => [...prev, optimisticMessage]);
       setNewMessage('');
+      setAttachmentFile(null);
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message');
+      setUploading(false);
     } finally {
       setSending(false);
     }
@@ -982,7 +1008,21 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
                               : 'bg-muted rounded-bl-sm'
                           }`}
                         >
-                          <p className="text-sm">{message.content}</p>
+                          {message.attachment_url && message.attachment_type === 'image' && (
+                            <div className="mb-2">
+                              <img src={message.attachment_url} alt="Shared image" className="rounded-lg max-w-full max-h-48 object-cover cursor-pointer" onClick={() => window.open(message.attachment_url!, '_blank')} />
+                            </div>
+                          )}
+                          {message.attachment_url && message.attachment_type === 'document' && (
+                            <a href={message.attachment_url} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 mb-2 p-2 rounded-lg ${isSender ? 'bg-primary-foreground/10' : 'bg-background/50'}`}>
+                              <FileText className="h-4 w-4 shrink-0" />
+                              <span className="text-xs underline">Download Document</span>
+                              <Download className="h-3 w-3 shrink-0" />
+                            </a>
+                          )}
+                          {message.content && !(message.content === '📷 Image' || message.content === '📎 Document') && (
+                            <p className="text-sm">{message.content}</p>
+                          )}
                           <div className={`flex items-center gap-1 mt-1 ${isSender ? 'justify-end' : ''}`}>
                             <span className="text-[10px] opacity-70">
                               {format(new Date(message.created_at), 'HH:mm')}
@@ -1001,7 +1041,18 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
                 </div>
               </ScrollArea>
               <div className="p-4 border-t">
+                {attachmentFile && (
+                  <div className="flex items-center gap-2 mb-2 p-2 bg-muted rounded-lg text-sm">
+                    <Paperclip className="h-4 w-4 text-muted-foreground" />
+                    <span className="truncate flex-1">{attachmentFile.name}</span>
+                    <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => setAttachmentFile(null)}>✕</Button>
+                  </div>
+                )}
                 <div className="flex gap-2">
+                  <input ref={fileInputRef} type="file" accept="image/*,.pdf,.doc,.docx" className="hidden" onChange={(e) => { setAttachmentFile(e.target.files?.[0] || null); e.target.value = ''; }} />
+                  <Button variant="ghost" size="icon" className="shrink-0" onClick={() => fileInputRef.current?.click()} disabled={sending}>
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
                   <Input
                     placeholder="Type a message..."
                     value={newMessage}
@@ -1009,7 +1060,7 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
                     onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
                     disabled={sending}
                   />
-                  <Button onClick={sendMessage} disabled={sending || !newMessage.trim()}>
+                  <Button onClick={sendMessage} disabled={sending || (!newMessage.trim() && !attachmentFile)}>
                     {sending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (

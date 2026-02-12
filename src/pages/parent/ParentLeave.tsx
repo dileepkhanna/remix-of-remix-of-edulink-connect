@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { Loader2, Calendar, Plus, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { Loader2, Calendar, Plus, Clock, CheckCircle2, XCircle, Paperclip, Download } from 'lucide-react';
 import { parentSidebarItems } from '@/config/parentSidebar';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,6 +21,7 @@ interface LeaveRequest {
   reason: string;
   status: string;
   created_at: string;
+  attachment_url: string | null;
 }
 
 export default function ParentLeave() {
@@ -34,6 +35,7 @@ export default function ParentLeave() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ fromDate: '', toDate: '', reason: '' });
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'parent')) {
@@ -73,7 +75,7 @@ export default function ParentLeave() {
           .eq('request_type', 'student')
           .order('created_at', { ascending: false });
 
-        if (leavesData) setLeaves(leavesData);
+        if (leavesData) setLeaves(leavesData as LeaveRequest[]);
       }
     }
     setLoadingData(false);
@@ -82,17 +84,33 @@ export default function ParentLeave() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!studentId || !formData.fromDate || !formData.toDate || !formData.reason) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Please fill all fields' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Please fill all required fields' });
       return;
     }
 
     setIsSubmitting(true);
+    let attachmentUrl: string | null = null;
+
+    if (attachmentFile) {
+      const fileExt = attachmentFile.name.split('.').pop();
+      const filePath = `leave-docs/${user!.id}/${Date.now()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage.from('photos').upload(filePath, attachmentFile);
+      if (uploadError) {
+        toast({ variant: 'destructive', title: 'Upload Error', description: uploadError.message });
+        setIsSubmitting(false);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from('photos').getPublicUrl(filePath);
+      attachmentUrl = urlData.publicUrl;
+    }
+
     const { error } = await supabase.from('leave_requests').insert({
       student_id: studentId,
       request_type: 'student',
       from_date: formData.fromDate,
       to_date: formData.toDate,
       reason: formData.reason,
+      attachment_url: attachmentUrl,
     });
 
     if (error) {
@@ -101,6 +119,7 @@ export default function ParentLeave() {
       toast({ title: 'Success', description: 'Leave request submitted successfully' });
       setDialogOpen(false);
       setFormData({ fromDate: '', toDate: '', reason: '' });
+      setAttachmentFile(null);
       fetchData();
     }
     setIsSubmitting(false);
@@ -149,6 +168,11 @@ export default function ParentLeave() {
                   <Label>Reason</Label>
                   <Textarea placeholder="Reason for leave..." value={formData.reason} onChange={(e) => setFormData({ ...formData, reason: e.target.value })} rows={4} />
                 </div>
+                <div className="space-y-2">
+                  <Label>Attachment (Optional)</Label>
+                  <Input type="file" accept="image/*,.pdf,.doc,.docx" onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)} />
+                  <p className="text-xs text-muted-foreground">Upload a document or image (optional)</p>
+                </div>
                 <DialogFooter>
                   <Button type="submit" disabled={isSubmitting} className="w-full gradient-parent">
                     {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
@@ -183,6 +207,11 @@ export default function ParentLeave() {
                           </span>
                         </div>
                         <p className="text-sm text-muted-foreground">{leave.reason}</p>
+                        {leave.attachment_url && (
+                          <a href={leave.attachment_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                            <Paperclip className="h-3 w-3" /> View Attachment
+                          </a>
+                        )}
                         <p className="text-xs text-muted-foreground">
                           Submitted: {new Date(leave.created_at).toLocaleDateString()}
                         </p>

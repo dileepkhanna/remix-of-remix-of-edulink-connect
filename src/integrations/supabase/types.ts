@@ -659,6 +659,7 @@ export type Database = {
       leave_requests: {
         Row: {
           approved_by: string | null
+          attachment_url: string | null
           created_at: string | null
           from_date: string
           id: string
@@ -671,6 +672,7 @@ export type Database = {
         }
         Insert: {
           approved_by?: string | null
+          attachment_url?: string | null
           created_at?: string | null
           from_date: string
           id?: string
@@ -683,6 +685,7 @@ export type Database = {
         }
         Update: {
           approved_by?: string | null
+          attachment_url?: string | null
           created_at?: string | null
           from_date?: string
           id?: string
@@ -712,6 +715,8 @@ export type Database = {
       }
       messages: {
         Row: {
+          attachment_type: string | null
+          attachment_url: string | null
           content: string
           created_at: string
           id: string
@@ -721,6 +726,8 @@ export type Database = {
           student_id: string | null
         }
         Insert: {
+          attachment_type?: string | null
+          attachment_url?: string | null
           content: string
           created_at?: string
           id?: string
@@ -730,6 +737,8 @@ export type Database = {
           student_id?: string | null
         }
         Update: {
+          attachment_type?: string | null
+          attachment_url?: string | null
           content?: string
           created_at?: string
           id?: string
