@@ -375,10 +375,10 @@ export default function ClassesManagement() {
 
                 <div className="space-y-2">
                   <Label>Class Teacher</Label>
-                  <Select value={editFormData.classTeacherId} onValueChange={(v) => setEditFormData({ ...editFormData, classTeacherId: v })}>
+                  <Select value={editFormData.classTeacherId || 'none'} onValueChange={(v) => setEditFormData({ ...editFormData, classTeacherId: v === 'none' ? '' : v })}>
                     <SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {teachers.map((t) => (
                         <SelectItem key={t.id} value={t.id}>{t.profiles?.full_name || 'Unknown'}</SelectItem>
                       ))}
