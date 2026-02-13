@@ -468,18 +468,6 @@ export default function TeachersManagement() {
                     </div>
                   )}
 
-                  <div className="col-span-2 space-y-2">
-                    <Label>Class Teacher Of</Label>
-                    <Select value={formData.classTeacherOf || "none"} onValueChange={(v) => setFormData({ ...formData, classTeacherOf: v === "none" ? "" : v })}>
-                      <SelectTrigger><SelectValue placeholder="Select class (optional)" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        {classes.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>{c.name} - {c.section}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
 
                 <DialogFooter>
