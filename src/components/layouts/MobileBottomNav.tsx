@@ -1,7 +1,7 @@
 import { ReactNode, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Plus } from 'lucide-react';
+import { LayoutDashboard, GraduationCap, Clock, MessageSquare, BookOpen, FileText, MoreHorizontal } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 
@@ -16,27 +16,12 @@ interface MobileBottomNavProps {
   roleColor: 'admin' | 'teacher' | 'parent';
 }
 
-// Primary tab paths per role (3 items each)
+// Primary tab paths per role
 const PRIMARY_PATHS: Record<string, string[]> = {
-  admin: ['/admin', '/admin/students', '/admin/messages'],
-  teacher: ['/teacher', '/teacher/attendance', '/teacher/messages'],
-  parent: ['/parent', '/parent/attendance', '/parent/messages'],
+  admin: ['/admin', '/admin/students', '/admin/attendance', '/admin/messages'],
+  teacher: ['/teacher', '/teacher/attendance', '/teacher/homework', '/teacher/messages'],
+  parent: ['/parent', '/parent/attendance', '/parent/exams', '/parent/messages'],
 };
-
-function NavButton({ item, isActive, activeColor, navigate }: { item: SidebarItem; isActive: boolean; activeColor: string; navigate: (path: string) => void }) {
-  return (
-    <button
-      onClick={() => navigate(item.path)}
-      className={cn(
-        "flex flex-col items-center justify-center gap-0.5 flex-1 py-1 transition-colors",
-        isActive ? activeColor : "text-muted-foreground"
-      )}
-    >
-      <span className="[&_svg]:h-5 [&_svg]:w-5">{item.icon}</span>
-      <span className={cn("text-[10px] leading-tight", isActive && "font-semibold")}>{item.label}</span>
-    </button>
-  );
-}
 
 export default function MobileBottomNav({ sidebarItems, roleColor }: MobileBottomNavProps) {
   const [moreOpen, setMoreOpen] = useState(false);
@@ -62,31 +47,36 @@ export default function MobileBottomNav({ sidebarItems, roleColor }: MobileBotto
     <>
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border lg:hidden">
         <div className="flex items-center justify-around h-16 px-1">
-          {/* First tab */}
-          {primaryItems[0] && (
-            <NavButton item={primaryItems[0]} isActive={location.pathname === primaryItems[0].path} activeColor={activeColor} navigate={navigate} />
-          )}
-
-          {/* Center (+) button */}
-          <button
-            onClick={() => setMoreOpen(true)}
-            className="flex flex-col items-center justify-center flex-1 py-1"
-          >
-            <span className={cn(
-              "flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg -mt-5 transition-transform active:scale-95",
-              moreOpen && "scale-95"
-            )}>
-              <Plus className="h-7 w-7" strokeWidth={2.5} />
-            </span>
-          </button>
-
-          {/* Remaining tabs */}
-          {primaryItems.slice(1).map((item) => {
+          {primaryItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
-              <NavButton key={item.path} item={item} isActive={isActive} activeColor={activeColor} navigate={navigate} />
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-0.5 flex-1 py-1 transition-colors",
+                  isActive ? activeColor : "text-muted-foreground"
+                )}
+              >
+                <span className="[&_svg]:h-5 [&_svg]:w-5">{item.icon}</span>
+                <span className={cn("text-[10px] leading-tight", isActive && "font-semibold")}>{item.label}</span>
+              </button>
             );
           })}
+          
+          {/* More button */}
+          {moreItems.length > 0 && (
+            <button
+              onClick={() => setMoreOpen(true)}
+              className={cn(
+                "flex flex-col items-center justify-center gap-0.5 flex-1 py-1 transition-colors",
+                moreOpen ? activeColor : "text-muted-foreground"
+              )}
+            >
+              <MoreHorizontal className="h-5 w-5" />
+              <span className="text-[10px] leading-tight">More</span>
+            </button>
+          )}
         </div>
       </nav>
 
