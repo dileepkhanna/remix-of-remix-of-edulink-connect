@@ -171,46 +171,46 @@ export default function ExamResultsView() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-4 pb-4">
-          <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
-            <div className="flex flex-col sm:flex-row flex-1 gap-3">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row flex-1 gap-2">
               <Select value={selectedExamName} onValueChange={setSelectedExamName}>
-                <SelectTrigger className="w-full sm:w-[170px]"><SelectValue placeholder="Exam / Unit" /></SelectTrigger>
+                <SelectTrigger className="w-full sm:w-[150px] h-9 text-sm"><SelectValue placeholder="Exam / Unit" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Exams</SelectItem>
                   {examNames.map(name => <SelectItem key={name} value={name!}>{name}</SelectItem>)}
                 </SelectContent>
               </Select>
               <Select value={selectedClass} onValueChange={(v) => { setSelectedClass(v); setSelectedStudent('all'); }}>
-                <SelectTrigger className="w-full sm:w-[150px]"><SelectValue placeholder="Class" /></SelectTrigger>
+                <SelectTrigger className="w-full sm:w-[130px] h-9 text-sm"><SelectValue placeholder="Class" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Classes</SelectItem>
                   {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}-{c.section.toUpperCase()}</SelectItem>)}
                 </SelectContent>
               </Select>
               <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-                <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Student" /></SelectTrigger>
+                <SelectTrigger className="w-full sm:w-[160px] h-9 text-sm"><SelectValue placeholder="Student" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Students</SelectItem>
                   {uniqueStudents.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.admission})</SelectItem>)}
                 </SelectContent>
               </Select>
-              <div className="relative w-full sm:w-[170px]">
+              <div className="relative w-full sm:w-[150px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9" />
+                <Input placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 text-sm" />
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Button variant={viewMode === 'table' ? 'default' : 'outline'} className="h-10" onClick={() => setViewMode('table')}>
-                <BarChart3 className="h-4 w-4 mr-1" /> Table
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Button variant={viewMode === 'table' ? 'default' : 'outline'} size="sm" className="h-8 text-xs" onClick={() => setViewMode('table')}>
+                <BarChart3 className="h-3.5 w-3.5 mr-1" /> Table
               </Button>
-              <Button variant={viewMode === 'report' ? 'default' : 'outline'} className="h-10" onClick={() => setViewMode('report')} disabled={selectedStudent === 'all'}>
-                <Award className="h-4 w-4 mr-1" /> Report Card
+              <Button variant={viewMode === 'report' ? 'default' : 'outline'} size="sm" className="h-8 text-xs" onClick={() => setViewMode('report')} disabled={selectedStudent === 'all'}>
+                <Award className="h-3.5 w-3.5 mr-1" /> Report
               </Button>
-              <Button variant="outline" size="icon" className="h-10 w-10" onClick={handlePDFDownload} disabled={filteredResults.length === 0} title="Download PDF">
-                <FileText className="h-4 w-4" />
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={handlePDFDownload} disabled={filteredResults.length === 0} title="Download PDF">
+                <FileText className="h-3.5 w-3.5" />
               </Button>
-              <Button variant="outline" size="icon" className="h-10 w-10" onClick={handleExport} disabled={filteredResults.length === 0} title="Export Excel">
-                <Download className="h-4 w-4" />
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleExport} disabled={filteredResults.length === 0} title="Export Excel">
+                <Download className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
@@ -338,14 +338,14 @@ export default function ExamResultsView() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/20">
-                      <TableHead>Student</TableHead>
-                      <TableHead>Admission No</TableHead>
-                      <TableHead>Exam</TableHead>
-                      <TableHead>Subject</TableHead>
-                      <TableHead>Class</TableHead>
-                      <TableHead className="text-center">Marks</TableHead>
-                      <TableHead className="text-center">%</TableHead>
-                      <TableHead className="text-center">Grade</TableHead>
+                      <TableHead className="text-xs sm:text-sm min-w-[80px]">Student</TableHead>
+                      <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Adm No</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Exam</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Subject</TableHead>
+                      <TableHead className="text-xs sm:text-sm hidden md:table-cell">Class</TableHead>
+                      <TableHead className="text-center text-xs sm:text-sm">Marks</TableHead>
+                      <TableHead className="text-center text-xs sm:text-sm">%</TableHead>
+                      <TableHead className="text-center text-xs sm:text-sm">Grade</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -353,19 +353,19 @@ export default function ExamResultsView() {
                       const pct = r.marks_obtained && r.exams?.max_marks ? (r.marks_obtained / r.exams.max_marks) * 100 : 0;
                       return (
                         <TableRow key={r.id}>
-                          <TableCell className="font-medium">{r.students?.full_name || '-'}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{r.students?.admission_number || '-'}</TableCell>
-                          <TableCell>{r.exams?.name || '-'}</TableCell>
-                          <TableCell className="capitalize">{r.exams?.subjects?.name || '-'}</TableCell>
-                          <TableCell>
-                            {r.exams?.classes ? <Badge variant="outline">{r.exams.classes.name}-{r.exams.classes.section.toUpperCase()}</Badge> : '-'}
+                          <TableCell className="font-medium text-xs sm:text-sm py-2">{r.students?.full_name || '-'}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground hidden sm:table-cell py-2">{r.students?.admission_number || '-'}</TableCell>
+                          <TableCell className="text-xs sm:text-sm py-2">{r.exams?.name || '-'}</TableCell>
+                          <TableCell className="capitalize text-xs sm:text-sm py-2">{r.exams?.subjects?.name || '-'}</TableCell>
+                          <TableCell className="hidden md:table-cell py-2">
+                            {r.exams?.classes ? <Badge variant="outline" className="text-xs">{r.exams.classes.name}-{r.exams.classes.section.toUpperCase()}</Badge> : '-'}
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-center text-xs sm:text-sm py-2">
                             <span className="font-semibold">{r.marks_obtained ?? '-'}</span>
-                            <span className="text-xs text-muted-foreground">/{r.exams?.max_marks ?? 100}</span>
+                            <span className="text-[10px] sm:text-xs text-muted-foreground">/{r.exams?.max_marks ?? 100}</span>
                           </TableCell>
-                          <TableCell className="text-center"><span className={`font-semibold ${getPctColor(pct)}`}>{pct.toFixed(0)}%</span></TableCell>
-                          <TableCell className="text-center"><Badge className={`text-xs ${getGradeColor(r.grade)}`}>{r.grade || '-'}</Badge></TableCell>
+                          <TableCell className="text-center py-2"><span className={`font-semibold text-xs sm:text-sm ${getPctColor(pct)}`}>{pct.toFixed(0)}%</span></TableCell>
+                          <TableCell className="text-center py-2"><Badge className={`text-[10px] sm:text-xs ${getGradeColor(r.grade)}`}>{r.grade || '-'}</Badge></TableCell>
                         </TableRow>
                       );
                     })}

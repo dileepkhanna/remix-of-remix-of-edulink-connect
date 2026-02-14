@@ -229,56 +229,56 @@ export default function ExamMarksEntry({ exams, onMarksUpdated }: Props) {
 
       {selectedExam && !loading && (
         <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Users className="h-4 w-4 text-primary" />
-                {selectedExam.name} - {selectedExam.classes?.name}-{selectedExam.classes?.section.toUpperCase()}
+          <CardHeader className="pb-3 px-3 sm:px-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <CardTitle className="text-sm sm:text-base flex flex-wrap items-center gap-1.5">
+                <Users className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="truncate">{selectedExam.name} - {selectedExam.classes?.name}-{selectedExam.classes?.section.toUpperCase()}</span>
                 {selectedExam.subjects && (
-                  <Badge variant="secondary" className="capitalize">
+                  <Badge variant="secondary" className="capitalize text-xs">
                     {selectedExam.subjects.name}
                   </Badge>
                 )}
               </CardTitle>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline">
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <Badge variant="outline" className="text-xs">
                   {getFilledCount()}/{students.length} filled
                 </Badge>
-                <Badge variant="outline">
+                <Badge variant="outline" className="text-xs">
                   Max: {selectedExam.max_marks}
                 </Badge>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-2 sm:px-6">
             <ScrollArea className="h-[400px]">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[250px]">Student</TableHead>
-                    <TableHead className="w-[100px]">Marks</TableHead>
-                    <TableHead className="w-[80px]">Grade</TableHead>
-                    <TableHead>Remarks</TableHead>
+                    <TableHead className="min-w-[120px] text-xs sm:text-sm">Student</TableHead>
+                    <TableHead className="w-[80px] text-xs sm:text-sm">Marks</TableHead>
+                    <TableHead className="w-[65px] text-xs sm:text-sm">Grade</TableHead>
+                    <TableHead className="hidden sm:table-cell text-xs sm:text-sm">Remarks</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {students.map((student) => (
                     <TableRow key={student.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
+                      <TableCell className="py-2">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-7 w-7 flex-shrink-0">
                             <AvatarImage src={student.photo_url || ''} />
-                            <AvatarFallback className="text-xs">
+                            <AvatarFallback className="text-[10px]">
                               {student.full_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                             </AvatarFallback>
                           </Avatar>
-                          <div>
-                            <p className="font-medium text-sm">{student.full_name}</p>
-                            <p className="text-xs text-muted-foreground">{student.admission_number}</p>
+                          <div className="min-w-0">
+                            <p className="font-medium text-xs sm:text-sm truncate">{student.full_name}</p>
+                            <p className="text-[10px] text-muted-foreground">{student.admission_number}</p>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="py-2">
                         <Input
                           type="number"
                           value={marks[student.id]?.marks || ''}
@@ -286,15 +286,15 @@ export default function ExamMarksEntry({ exams, onMarksUpdated }: Props) {
                           placeholder="0"
                           max={selectedExam.max_marks}
                           min={0}
-                          className="h-8 w-20"
+                          className="h-8 w-16 sm:w-20 text-sm"
                         />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="py-2">
                         <Select
                           value={marks[student.id]?.grade || 'none'}
                           onValueChange={(v) => updateMark(student.id, 'grade', v === 'none' ? '' : v)}
                         >
-                          <SelectTrigger className="h-8 w-16">
+                          <SelectTrigger className="h-8 w-14 sm:w-16 text-xs">
                             <SelectValue placeholder="-" />
                           </SelectTrigger>
                           <SelectContent>
@@ -310,7 +310,7 @@ export default function ExamMarksEntry({ exams, onMarksUpdated }: Props) {
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell py-2">
                         <Input
                           value={marks[student.id]?.remarks || ''}
                           onChange={(e) => updateMark(student.id, 'remarks', e.target.value)}
@@ -324,12 +324,12 @@ export default function ExamMarksEntry({ exams, onMarksUpdated }: Props) {
               </Table>
             </ScrollArea>
 
-            <div className="flex justify-between items-center mt-4 pt-4 border-t">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mt-4 pt-4 border-t">
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
                 <CheckCircle2 className="h-4 w-4 text-primary" />
                 Grades auto-calculate based on marks
               </div>
-              <Button onClick={saveMarks} disabled={saving}>
+              <Button onClick={saveMarks} disabled={saving} className="w-full sm:w-auto">
                 {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                 Save All Marks
               </Button>
