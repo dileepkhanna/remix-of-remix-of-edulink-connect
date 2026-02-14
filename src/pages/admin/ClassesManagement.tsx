@@ -32,6 +32,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Search, Loader2, MoreHorizontal, Edit, Trash2, Users } from 'lucide-react';
 import {
@@ -306,45 +307,81 @@ export default function ClassesManagement() {
             ) : filteredClasses.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">{searchQuery ? 'No classes found' : 'No classes added yet'}</div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Class</TableHead>
-                      <TableHead>Section</TableHead>
-                      <TableHead>Academic Year</TableHead>
-                      <TableHead>Class Teacher</TableHead>
-                      <TableHead>Students</TableHead>
-                      <TableHead className="w-[50px]"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredClasses.map((cls) => (
-                      <TableRow key={cls.id}>
-                        <TableCell className="font-medium">{cls.name}</TableCell>
-                        <TableCell>{cls.section}</TableCell>
-                        <TableCell>{cls.academic_year}</TableCell>
-                        <TableCell>{cls.class_teacher?.profiles?.full_name || 'Not assigned'}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                            {cls.student_count}
-                          </div>
-                        </TableCell>
-                        <TableCell>
+              <>
+                {/* Mobile Cards */}
+                <div className="space-y-3 sm:hidden">
+                  {filteredClasses.map((cls) => (
+                    <div key={cls.id} className="p-3 rounded-xl border bg-muted/10 space-y-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm">{cls.name} - {cls.section}</p>
+                          <Badge variant="secondary" className="text-[10px] mt-0.5">{cls.academic_year}</Badge>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
                           <DropdownMenu>
-                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => openEditDialog(cls)}><Edit className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
                               <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteClass(cls.id)}><Trash2 className="h-4 w-4 mr-2" />Delete</DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
-                        </TableCell>
+                        </div>
+                      </div>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Users className="h-3 w-3 shrink-0" />
+                          <span>{cls.student_count} Students</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <span className="font-medium">Teacher:</span>
+                          <span>{cls.class_teacher?.profiles?.full_name || 'Not assigned'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop Table */}
+                <div className="overflow-x-auto hidden sm:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Class</TableHead>
+                        <TableHead>Section</TableHead>
+                        <TableHead>Academic Year</TableHead>
+                        <TableHead>Class Teacher</TableHead>
+                        <TableHead>Students</TableHead>
+                        <TableHead className="w-[50px]"></TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredClasses.map((cls) => (
+                        <TableRow key={cls.id}>
+                          <TableCell className="font-medium">{cls.name}</TableCell>
+                          <TableCell>{cls.section}</TableCell>
+                          <TableCell>{cls.academic_year}</TableCell>
+                          <TableCell>{cls.class_teacher?.profiles?.full_name || 'Not assigned'}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4 text-muted-foreground" />
+                              {cls.student_count}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => openEditDialog(cls)}><Edit className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteClass(cls.id)}><Trash2 className="h-4 w-4 mr-2" />Delete</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

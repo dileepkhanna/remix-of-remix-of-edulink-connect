@@ -234,16 +234,16 @@ export default function LeadsSettings() {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Master Toggle */}
-          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg bg-muted/50 border">
+            <div className="min-w-0">
               <p className="font-medium">Enable Leads Module for Teachers</p>
               <p className="text-sm text-muted-foreground">
                 When OFF, the Leads button is completely hidden from all teacher panels.
-                <br />
-                <span className="text-xs font-medium text-primary">Admin access to Leads Management is always available regardless of this setting.</span>
               </p>
+              <span className="text-xs font-medium text-primary">Admin access is always available regardless of this setting.</span>
             </div>
             <Switch
+              className="shrink-0"
               checked={moduleEnabled}
               onCheckedChange={handleToggleModule}
               disabled={saving}
@@ -256,7 +256,7 @@ export default function LeadsSettings() {
               <div className="space-y-3">
                 <Label className="text-base font-medium">Teacher Access Mode</Label>
                 <Select value={permissionMode} onValueChange={(v) => handleModeChange(v as 'all' | 'selected')}>
-                  <SelectTrigger className="w-[300px]">
+                  <SelectTrigger className="w-full sm:w-[300px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

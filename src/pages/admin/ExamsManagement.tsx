@@ -179,7 +179,43 @@ export default function ExamsManagement() {
                     </div>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <div className="overflow-x-auto">
+                    {/* Mobile Cards */}
+                    <div className="space-y-2 p-3 sm:hidden">
+                      {examList.map((exam) => (
+                        <div key={exam.id} className="p-3 rounded-xl border bg-muted/10 space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="space-y-1">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <Badge variant="outline" className="text-[10px]">
+                                  {exam.classes ? `${exam.classes.name}-${exam.classes.section.toUpperCase()}` : 'All'}
+                                </Badge>
+                                <Badge variant="secondary" className="text-[10px] capitalize">{exam.subjects?.name || 'All'}</Badge>
+                              </div>
+                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                {exam.exam_date && (
+                                  <span className="flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    {new Date(exam.exam_date).toLocaleDateString()}
+                                  </span>
+                                )}
+                                <span>Max: {exam.max_marks}</span>
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive shrink-0"
+                              onClick={() => handleDeleteExam(exam.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Desktop Table */}
+                    <div className="overflow-x-auto hidden sm:block">
                       <Table>
                         <TableHeader>
                           <TableRow>
