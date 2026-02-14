@@ -1,7 +1,7 @@
 import { ReactNode, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { LayoutDashboard, GraduationCap, Clock, MessageSquare, BookOpen, FileText, MoreHorizontal } from 'lucide-react';
+import { LayoutDashboard, GraduationCap, Clock, MessageSquare, BookOpen, FileText, Plus } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 
@@ -51,17 +51,21 @@ export default function MobileBottomNav({ sidebarItems, roleColor }: MobileBotto
     parent: 'text-[hsl(210,8%,45%)]',
   }[roleColor];
 
+  const moreBg = {
+    admin: 'bg-primary',
+    teacher: 'bg-[hsl(152,35%,16%)]',
+    parent: 'bg-[hsl(210,8%,45%)]',
+  }[roleColor];
+
   const moreButton = moreItems.length > 0 ? (
     <button
       key="__more__"
       onClick={() => setMoreOpen(true)}
-      className={cn(
-        "flex flex-col items-center justify-center gap-0.5 flex-1 py-1 transition-colors",
-        moreOpen ? activeColor : "text-muted-foreground"
-      )}
+      className="flex items-center justify-center flex-1 py-1"
     >
-      <MoreHorizontal className="h-5 w-5" />
-      <span className="text-[10px] leading-tight">More</span>
+      <span className={cn("flex items-center justify-center h-10 w-10 rounded-full text-primary-foreground", moreBg)}>
+        <Plus className="h-5 w-5" />
+      </span>
     </button>
   ) : null;
 
