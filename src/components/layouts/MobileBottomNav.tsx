@@ -26,8 +26,8 @@ const PRIMARY_PATHS: Record<string, string[]> = {
 // Index where "More" button should be inserted (0-indexed among primary items)
 const MORE_BUTTON_INDEX: Record<string, number> = {
   admin: 2,
-  teacher: 4, // end
-  parent: 4,  // end
+  teacher: 2,
+  parent: 2,
 };
 
 export default function MobileBottomNav({ sidebarItems, roleColor }: MobileBottomNavProps) {
