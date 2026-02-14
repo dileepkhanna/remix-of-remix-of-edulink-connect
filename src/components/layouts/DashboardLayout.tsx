@@ -284,7 +284,13 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
         {/* Header */}
         <header className="h-16 bg-card border-b flex items-center justify-between px-4 lg:px-6">
           <div className="flex items-center gap-4">
-            <div className="hidden sm:block">
+            {/* Mobile: Logo + Name */}
+            <div className="flex items-center gap-2 lg:hidden">
+              <img src="/ase-logo.jpg" alt="School Logo" className="h-9 w-9 rounded-lg object-cover" />
+              <h1 className="font-display font-bold text-base leading-tight">SmartEduConnect</h1>
+            </div>
+            {/* Desktop: Page title */}
+            <div className="hidden lg:block">
               <h2 className="font-display font-semibold text-lg">
                 {sidebarItems.find(item => item.path === location.pathname)?.label || 'Dashboard'}
               </h2>
