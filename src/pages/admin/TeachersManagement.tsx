@@ -583,14 +583,14 @@ export default function TeachersManagement() {
 
         {/* Edit Teacher Dialog */}
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display">Edit Teacher</DialogTitle>
               <DialogDescription>Update teacher details and credentials</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleEditTeacher} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2 space-y-2">
                   <Label>Full Name</Label>
                   <Input 
                     value={editFormData.fullName} 
@@ -617,7 +617,7 @@ export default function TeachersManagement() {
                   />
                 </div>
 
-                <div className="col-span-2 space-y-2">
+                <div className="sm:col-span-2 space-y-2">
                   <Label>Subjects (comma separated)</Label>
                   <Input 
                     value={editFormData.subjects} 
@@ -637,7 +637,17 @@ export default function TeachersManagement() {
                   </Select>
                 </div>
 
-                <div className="col-span-2 space-y-2">
+                <div className="space-y-2">
+                  <Label>New Password (optional)</Label>
+                  <Input 
+                    type="password"
+                    value={editFormData.newPassword} 
+                    onChange={(e) => setEditFormData({ ...editFormData, newPassword: e.target.value })} 
+                    placeholder="Leave blank to keep current"
+                  />
+                </div>
+
+                <div className="sm:col-span-2 space-y-2">
                   <Label>Class Teacher Of</Label>
                   <Select value={editFormData.classTeacherOf || "none"} onValueChange={(v) => setEditFormData({ ...editFormData, classTeacherOf: v === "none" ? "" : v })}>
                     <SelectTrigger><SelectValue placeholder="Select class (optional)" /></SelectTrigger>
@@ -649,25 +659,15 @@ export default function TeachersManagement() {
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="space-y-2">
-                  <Label>New Password (optional)</Label>
-                  <Input 
-                    type="password"
-                    value={editFormData.newPassword} 
-                    onChange={(e) => setEditFormData({ ...editFormData, newPassword: e.target.value })} 
-                    placeholder="Leave blank to keep current"
-                  />
-                </div>
               </div>
 
-              <DialogFooter>
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>Cancel</Button>
                 <Button type="submit" disabled={isSubmitting} className="gradient-admin">
                   {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Save Changes
                 </Button>
-              </DialogFooter>
+              </div>
             </form>
           </DialogContent>
         </Dialog>
