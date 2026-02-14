@@ -8,8 +8,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Send, Loader2, MessageCircle, Check, CheckCheck, Plus, Crown, UserCheck, Paperclip, Image, Download, FileText } from 'lucide-react';
+import { Send, Loader2, MessageCircle, Check, CheckCheck, Plus, Crown, UserCheck, Paperclip, Image, Download, FileText, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Message {
   id: string;
@@ -73,6 +74,7 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
   const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
 
   // Class/Student selection for teachers and admins
   const [showNewMessage, setShowNewMessage] = useState(false);
@@ -754,9 +756,9 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[600px]">
-      {/* Contacts List */}
-      <Card className="md:col-span-1">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-220px)] md:h-[600px]">
+      {/* Contacts List - hidden on mobile when a contact is selected */}
+      <Card className={`md:col-span-1 ${isMobile && selectedContact ? 'hidden' : ''}`}>
         <CardHeader className="py-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
@@ -1062,20 +1064,25 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
       </Card>
 
       {/* Chat Area */}
-      <Card className="md:col-span-2 flex flex-col">
+      <Card className={`md:col-span-2 flex flex-col ${isMobile && !selectedContact ? 'hidden' : ''}`}>
         {selectedContact ? (
           <>
             <CardHeader className="py-3 border-b">
               <div className="flex items-center gap-3">
+                {isMobile && (
+                  <Button variant="ghost" size="icon" className="shrink-0 -ml-2" onClick={() => setSelectedContact(null)}>
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                )}
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={selectedContact.avatar} />
                   <AvatarFallback>
                     {selectedContact.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                   </AvatarFallback>
                 </Avatar>
-                <div>
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <CardTitle className="text-base">{selectedContact.name}</CardTitle>
+                    <CardTitle className="text-base truncate">{selectedContact.name}</CardTitle>
                     {getRoleIcon(selectedContact)}
                     {selectedContact.roleLabel && (
                       <Badge variant="secondary" className="text-xs">
@@ -1091,7 +1098,7 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="flex-1 p-0 flex flex-col">
+            <CardContent className="flex-1 p-0 flex flex-col overflow-hidden">
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">
                   {messages.map((message) => {
