@@ -16,11 +16,18 @@ interface MobileBottomNavProps {
   roleColor: 'admin' | 'teacher' | 'parent';
 }
 
-// Primary tab paths per role
+// Primary tab paths per role (order matters for display)
 const PRIMARY_PATHS: Record<string, string[]> = {
-  admin: ['/admin', '/admin/students', '/admin/attendance', '/admin/messages'],
+  admin: ['/admin', '/admin/students', '/admin/messages', '/admin/attendance'],
   teacher: ['/teacher', '/teacher/attendance', '/teacher/homework', '/teacher/messages'],
   parent: ['/parent', '/parent/attendance', '/parent/exams', '/parent/messages'],
+};
+
+// Index where "More" button should be inserted (0-indexed among primary items)
+const MORE_BUTTON_INDEX: Record<string, number> = {
+  admin: 2,
+  teacher: 4, // end
+  parent: 4,  // end
 };
 
 export default function MobileBottomNav({ sidebarItems, roleColor }: MobileBottomNavProps) {
@@ -32,6 +39,7 @@ export default function MobileBottomNav({ sidebarItems, roleColor }: MobileBotto
   if (!isMobile) return null;
 
   const primaryPaths = PRIMARY_PATHS[roleColor] || PRIMARY_PATHS.admin;
+  const moreIndex = MORE_BUTTON_INDEX[roleColor] ?? primaryPaths.length;
   const primaryItems = primaryPaths
     .map(path => sidebarItems.find(item => item.path === path))
     .filter(Boolean) as SidebarItem[];
@@ -43,40 +51,47 @@ export default function MobileBottomNav({ sidebarItems, roleColor }: MobileBotto
     parent: 'text-[hsl(210,8%,45%)]',
   }[roleColor];
 
+  const moreButton = moreItems.length > 0 ? (
+    <button
+      key="__more__"
+      onClick={() => setMoreOpen(true)}
+      className={cn(
+        "flex flex-col items-center justify-center gap-0.5 flex-1 py-1 transition-colors",
+        moreOpen ? activeColor : "text-muted-foreground"
+      )}
+    >
+      <MoreHorizontal className="h-5 w-5" />
+      <span className="text-[10px] leading-tight">More</span>
+    </button>
+  ) : null;
+
+  // Build tab list with More inserted at the right position
+  const tabs: React.ReactNode[] = [];
+  primaryItems.forEach((item, i) => {
+    if (i === moreIndex && moreButton) tabs.push(moreButton);
+    const isActive = location.pathname === item.path;
+    tabs.push(
+      <button
+        key={item.path}
+        onClick={() => navigate(item.path)}
+        className={cn(
+          "flex flex-col items-center justify-center gap-0.5 flex-1 py-1 transition-colors",
+          isActive ? activeColor : "text-muted-foreground"
+        )}
+      >
+        <span className="[&_svg]:h-5 [&_svg]:w-5">{item.icon}</span>
+        <span className={cn("text-[10px] leading-tight", isActive && "font-semibold")}>{item.label}</span>
+      </button>
+    );
+  });
+  // If moreIndex >= primaryItems.length, append at end
+  if (moreIndex >= primaryItems.length && moreButton) tabs.push(moreButton);
+
   return (
     <>
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border lg:hidden">
         <div className="flex items-center justify-around h-16 px-1">
-          {primaryItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 flex-1 py-1 transition-colors",
-                  isActive ? activeColor : "text-muted-foreground"
-                )}
-              >
-                <span className="[&_svg]:h-5 [&_svg]:w-5">{item.icon}</span>
-                <span className={cn("text-[10px] leading-tight", isActive && "font-semibold")}>{item.label}</span>
-              </button>
-            );
-          })}
-          
-          {/* More button */}
-          {moreItems.length > 0 && (
-            <button
-              onClick={() => setMoreOpen(true)}
-              className={cn(
-                "flex flex-col items-center justify-center gap-0.5 flex-1 py-1 transition-colors",
-                moreOpen ? activeColor : "text-muted-foreground"
-              )}
-            >
-              <MoreHorizontal className="h-5 w-5" />
-              <span className="text-[10px] leading-tight">More</span>
-            </button>
-          )}
+          {tabs}
         </div>
       </nav>
 
