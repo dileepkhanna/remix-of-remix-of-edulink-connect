@@ -530,9 +530,9 @@ export default function TeachersManagement() {
                           </DropdownMenu>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-1.5 text-xs">
-                        <div className="flex items-center gap-1 text-muted-foreground truncate"><Phone className="h-3 w-3 shrink-0" />{teacher.profiles?.phone || 'N/A'}</div>
-                        <div className="flex items-center gap-1 text-muted-foreground truncate"><Mail className="h-3 w-3 shrink-0" />{teacher.profiles?.email || 'N/A'}</div>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex items-center gap-1 text-muted-foreground"><Mail className="h-3 w-3 shrink-0" /><span className="break-all">{teacher.profiles?.email || 'N/A'}</span></div>
+                        <div className="flex items-center gap-1 text-muted-foreground"><Phone className="h-3 w-3 shrink-0" />{teacher.profiles?.phone || 'N/A'}</div>
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5">
                         {teacher.qualification && <Badge variant="outline" className="text-[10px]">{teacher.qualification}</Badge>}
