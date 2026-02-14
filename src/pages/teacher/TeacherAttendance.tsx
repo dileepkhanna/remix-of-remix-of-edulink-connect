@@ -416,19 +416,52 @@ export default function TeacherAttendance() {
           </Card>
         ) : (
           <>
-            {/* Quick Actions */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground mr-1">Quick mark all:</span>
-              <Button size="sm" variant="outline" className="gap-1.5 text-success border-success/30 hover:bg-success/10" onClick={() => markAllAs('present')}>
-                <Check className="h-3.5 w-3.5" /> All Present
-              </Button>
-              <Button size="sm" variant="outline" className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => markAllAs('absent')}>
-                <X className="h-3.5 w-3.5" /> All Absent
-              </Button>
-              <Button size="sm" variant="outline" className="gap-1.5 text-warning border-warning/30 hover:bg-warning/10" onClick={() => markAllAs('late')}>
-                <Clock className="h-3.5 w-3.5" /> All Late
-              </Button>
-            </div>
+            {/* Quick Actions + Summary + Actions - all in one bar */}
+            <Card className="card-elevated">
+              <CardContent className="p-3 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Quick mark all:</span>
+                  <div className="flex items-center gap-1.5">
+                    <Button size="sm" variant="outline" className="gap-1 h-8 px-2.5 text-xs text-success border-success/30 hover:bg-success/10" onClick={() => markAllAs('present')}>
+                      <Check className="h-3 w-3" /> Present
+                    </Button>
+                    <Button size="sm" variant="outline" className="gap-1 h-8 px-2.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => markAllAs('absent')}>
+                      <X className="h-3 w-3" /> Absent
+                    </Button>
+                    <Button size="sm" variant="outline" className="gap-1 h-8 px-2.5 text-xs text-warning border-warning/30 hover:bg-warning/10" onClick={() => markAllAs('late')}>
+                      <Clock className="h-3 w-3" /> Late
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-2 pt-1 border-t">
+                  <div className="text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">{totalStudents}</span> students · <span className="text-success font-medium">{presentCount}</span> present · <span className="text-destructive font-medium">{absentCount}</span> absent · <span className="text-warning font-medium">{lateCount}</span> late
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-8 px-2.5" disabled={students.length === 0}>
+                          <Download className="h-3.5 w-3.5 mr-1" />
+                          <span className="text-xs">Export</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={handleExportCSV}>
+                          <FileSpreadsheet className="h-4 w-4 mr-2" /> CSV
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleExportPDF}>
+                          <FileText className="h-4 w-4 mr-2" /> PDF
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button onClick={saveAttendance} disabled={saving} size="sm" className="h-8 px-3 gap-1.5">
+                      {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                      <span className="text-xs">Save</span>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Student List */}
             <Card className="card-elevated">
@@ -520,39 +553,6 @@ export default function TeacherAttendance() {
               </CardContent>
             </Card>
 
-            {/* Bottom Action Bar */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-xl bg-card border shadow-sm sticky bottom-20 lg:bottom-4 z-10">
-              <div className="text-xs sm:text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">{totalStudents}</span> students &middot;{' '}
-                <span className="text-success font-medium">{presentCount}</span> present &middot;{' '}
-                <span className="text-destructive font-medium">{absentCount}</span> absent &middot;{' '}
-                <span className="text-warning font-medium">{lateCount}</span> late
-              </div>
-              <div className="flex items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" disabled={students.length === 0}>
-                      <Download className="h-4 w-4 mr-1.5" />
-                      <span className="text-xs">Export</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={handleExportCSV}>
-                      <FileSpreadsheet className="h-4 w-4 mr-2" />
-                      Download CSV
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleExportPDF}>
-                      <FileText className="h-4 w-4 mr-2" />
-                      Print / Save as PDF
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button onClick={saveAttendance} disabled={saving} size="sm" className="gap-1.5">
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  <span className="text-xs">Save Attendance</span>
-                </Button>
-              </div>
-            </div>
           </>
         )}
       </div>
