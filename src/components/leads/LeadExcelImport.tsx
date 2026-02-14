@@ -169,15 +169,15 @@ export default function LeadExcelImport({ open, onOpenChange, onSuccess }: LeadE
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={downloadTemplate} className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={downloadTemplate} className="flex items-center gap-2 w-full sm:w-auto text-sm">
               <Download className="h-4 w-4" />
               Download Template
             </Button>
             <Button
               onClick={() => fileInputRef.current?.click()}
               disabled={importing}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 w-full sm:w-auto text-sm"
             >
               <Upload className="h-4 w-4" />
               {importing ? 'Importing...' : 'Upload Excel File'}
