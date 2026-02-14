@@ -228,14 +228,14 @@ export default function ParentProgress() {
 
         {/* Exam Results */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
+          <CardHeader className="px-3 sm:px-6">
+            <CardTitle className="text-sm sm:text-base flex items-center gap-2">
               <Award className="h-4 w-4 text-primary" />
               Exam Results
             </CardTitle>
-            <CardDescription>Detailed examination performance</CardDescription>
+            <CardDescription className="text-xs sm:text-sm">Detailed examination performance</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-2 sm:px-6">
             <StudentProgressView marks={marks} studentName={childName} showAnalytics={true} />
           </CardContent>
         </Card>
