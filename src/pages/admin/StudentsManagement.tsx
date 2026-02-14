@@ -150,44 +150,85 @@ export default function StudentsManagement() {
             ) : filteredStudents.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">{searchQuery ? 'No students found' : 'No students added yet'}</div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Student</TableHead>
-                      <TableHead>Admission No</TableHead>
-                      <TableHead>Class</TableHead>
-                      <TableHead>Parent</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="w-[80px]">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredStudents.map((student) => (
-                      <TableRow key={student.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar>
-                              <AvatarImage src={student.photo_url || ''} />
-                              <AvatarFallback className="gradient-primary text-white">{student.full_name[0]}</AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium">{student.full_name}</span>
+              <>
+                {/* Mobile Cards */}
+                <div className="space-y-3 sm:hidden">
+                  {filteredStudents.map((student) => (
+                    <div key={student.id} className="p-3 rounded-xl border bg-muted/10 space-y-2.5" onClick={() => openStudentDetails(student)}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Avatar className="h-10 w-10 shrink-0">
+                            <AvatarImage src={student.photo_url || ''} />
+                            <AvatarFallback className="gradient-primary text-white text-sm">{student.full_name[0]}</AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <p className="font-medium text-sm truncate">{student.full_name}</p>
+                            <Badge variant="secondary" className="font-mono text-[10px] font-semibold bg-primary/10 text-primary border-primary/20 mt-0.5">
+                              {student.admission_number}
+                            </Badge>
                           </div>
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">{student.admission_number}</TableCell>
-                        <TableCell>{student.classes ? `${student.classes.name} - ${student.classes.section}` : 'N/A'}</TableCell>
-                        <TableCell>{student.parent_name || 'N/A'}</TableCell>
-                        <TableCell><Badge className={student.status === 'active' ? 'status-active' : 'status-inactive'}>{student.status}</Badge></TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="icon" onClick={() => openStudentDetails(student)}>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Badge className={`text-[10px] ${student.status === 'active' ? 'status-active' : 'status-inactive'}`}>{student.status}</Badge>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); openStudentDetails(student); }}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                        </TableCell>
+                        </div>
+                      </div>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <GraduationCap className="h-3 w-3 shrink-0" />
+                          <span>{student.classes ? `${student.classes.name} - ${student.classes.section}` : 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <User className="h-3 w-3 shrink-0" />
+                          <span>{student.parent_name || 'No parent'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop Table */}
+                <div className="overflow-x-auto hidden sm:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Student</TableHead>
+                        <TableHead>Admission No</TableHead>
+                        <TableHead>Class</TableHead>
+                        <TableHead>Parent</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="w-[80px]">Action</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredStudents.map((student) => (
+                        <TableRow key={student.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Avatar>
+                                <AvatarImage src={student.photo_url || ''} />
+                                <AvatarFallback className="gradient-primary text-white">{student.full_name[0]}</AvatarFallback>
+                              </Avatar>
+                              <span className="font-medium">{student.full_name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-mono text-sm">{student.admission_number}</TableCell>
+                          <TableCell>{student.classes ? `${student.classes.name} - ${student.classes.section}` : 'N/A'}</TableCell>
+                          <TableCell>{student.parent_name || 'N/A'}</TableCell>
+                          <TableCell><Badge className={student.status === 'active' ? 'status-active' : 'status-inactive'}>{student.status}</Badge></TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="icon" onClick={() => openStudentDetails(student)}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
