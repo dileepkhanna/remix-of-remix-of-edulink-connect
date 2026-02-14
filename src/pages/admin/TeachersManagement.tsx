@@ -54,6 +54,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { z } from 'zod';
 import { BackButton } from '@/components/ui/back-button';
+import { cn } from '@/lib/utils';
 
 const teacherSchema = z.object({
   fullName: z.string().min(2, 'Name is required').max(100),
@@ -500,83 +501,127 @@ export default function TeachersManagement() {
             ) : filteredTeachers.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">{searchQuery ? 'No teachers found matching your search' : 'No teachers added yet'}</div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Teacher</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Qualification</TableHead>
-                      <TableHead>Subjects</TableHead>
-                      <TableHead>Class Teacher Of</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="w-[50px]"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTeachers.map((teacher) => (
-                      <TableRow key={teacher.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar>
-                              <AvatarImage src={teacher.profiles?.photo_url || ''} />
-                              <AvatarFallback className="gradient-teacher text-white">{teacher.profiles?.full_name?.[0] || 'T'}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{teacher.profiles?.full_name || 'N/A'}</span>
-                              <Badge variant="secondary" className="w-fit mt-1 font-mono text-xs font-semibold bg-primary/10 text-primary border-primary/20">
-                                {teacher.teacher_id}
-                              </Badge>
-                            </div>
+              <>
+                {/* Mobile Cards */}
+                <div className="space-y-3 sm:hidden">
+                  {filteredTeachers.map((teacher) => (
+                    <div key={teacher.id} className="p-3 rounded-xl border bg-muted/10 space-y-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Avatar className="h-10 w-10 shrink-0">
+                            <AvatarImage src={teacher.profiles?.photo_url || ''} />
+                            <AvatarFallback className="gradient-teacher text-white text-sm">{teacher.profiles?.full_name?.[0] || 'T'}</AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <p className="font-medium text-sm truncate">{teacher.profiles?.full_name || 'N/A'}</p>
+                            <Badge variant="secondary" className="font-mono text-[10px] font-semibold bg-primary/10 text-primary border-primary/20 mt-0.5">
+                              {teacher.teacher_id}
+                            </Badge>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-1 text-sm"><Mail className="h-3 w-3 text-muted-foreground" />{teacher.profiles?.email || 'N/A'}</div>
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground"><Phone className="h-3 w-3" />{teacher.profiles?.phone || 'N/A'}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{teacher.qualification || 'N/A'}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {teacher.subjects?.slice(0, 2).map((sub, i) => (
-                              <Badge key={i} variant="outline" className="text-xs">{sub}</Badge>
-                            ))}
-                            {teacher.subjects?.length > 2 && <Badge variant="outline" className="text-xs">+{teacher.subjects.length - 2}</Badge>}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {teacher.assigned_classes && teacher.assigned_classes.length > 0 ? (
-                            <div className="flex flex-wrap gap-1">
-                              {teacher.assigned_classes.slice(0, 2).map((c, i) => (
-                                <Badge key={i} className="text-xs bg-primary/10 text-primary">{c.name}-{c.section}</Badge>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={teacher.status === 'active' ? 'status-active' : 'status-inactive'}>{teacher.status}</Badge>
-                        </TableCell>
-                        <TableCell>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Badge className={cn("text-[10px]", teacher.status === 'active' ? 'status-active' : 'status-inactive')}>{teacher.status}</Badge>
                           <DropdownMenu>
-                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => openEditDialog(teacher)}>
-                                <Edit className="h-4 w-4 mr-2" />Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteTeacher(teacher.id, teacher.user_id)}>
-                                <Trash2 className="h-4 w-4 mr-2" />Delete
-                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openEditDialog(teacher)}><Edit className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteTeacher(teacher.id, teacher.user_id)}><Trash2 className="h-4 w-4 mr-2" />Delete</DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
-                        </TableCell>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5 text-xs">
+                        <div className="flex items-center gap-1 text-muted-foreground truncate"><Phone className="h-3 w-3 shrink-0" />{teacher.profiles?.phone || 'N/A'}</div>
+                        <div className="flex items-center gap-1 text-muted-foreground truncate"><Mail className="h-3 w-3 shrink-0" />{teacher.profiles?.email || 'N/A'}</div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {teacher.qualification && <Badge variant="outline" className="text-[10px]">{teacher.qualification}</Badge>}
+                        {teacher.subjects?.map((sub, i) => (
+                          <Badge key={i} variant="outline" className="text-[10px]">{sub}</Badge>
+                        ))}
+                        {teacher.assigned_classes && teacher.assigned_classes.length > 0 && teacher.assigned_classes.map((c, i) => (
+                          <Badge key={`class-${i}`} className="text-[10px] bg-primary/10 text-primary">{c.name}-{c.section}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop Table */}
+                <div className="overflow-x-auto hidden sm:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Teacher</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Qualification</TableHead>
+                        <TableHead>Subjects</TableHead>
+                        <TableHead>Class Teacher Of</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="w-[50px]"></TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTeachers.map((teacher) => (
+                        <TableRow key={teacher.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Avatar>
+                                <AvatarImage src={teacher.profiles?.photo_url || ''} />
+                                <AvatarFallback className="gradient-teacher text-white">{teacher.profiles?.full_name?.[0] || 'T'}</AvatarFallback>
+                              </Avatar>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{teacher.profiles?.full_name || 'N/A'}</span>
+                                <Badge variant="secondary" className="w-fit mt-1 font-mono text-xs font-semibold bg-primary/10 text-primary border-primary/20">
+                                  {teacher.teacher_id}
+                                </Badge>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1 text-sm"><Mail className="h-3 w-3 text-muted-foreground" />{teacher.profiles?.email || 'N/A'}</div>
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground"><Phone className="h-3 w-3" />{teacher.profiles?.phone || 'N/A'}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>{teacher.qualification || 'N/A'}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {teacher.subjects?.slice(0, 2).map((sub, i) => (
+                                <Badge key={i} variant="outline" className="text-xs">{sub}</Badge>
+                              ))}
+                              {teacher.subjects?.length > 2 && <Badge variant="outline" className="text-xs">+{teacher.subjects.length - 2}</Badge>}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {teacher.assigned_classes && teacher.assigned_classes.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {teacher.assigned_classes.slice(0, 2).map((c, i) => (
+                                  <Badge key={i} className="text-xs bg-primary/10 text-primary">{c.name}-{c.section}</Badge>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={teacher.status === 'active' ? 'status-active' : 'status-inactive'}>{teacher.status}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => openEditDialog(teacher)}><Edit className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteTeacher(teacher.id, teacher.user_id)}><Trash2 className="h-4 w-4 mr-2" />Delete</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
