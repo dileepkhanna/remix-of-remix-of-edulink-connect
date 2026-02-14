@@ -253,17 +253,17 @@ export default function LeadsManagement() {
           <TabsContent value="leads" className="space-y-4">
             {/* Filters */}
             <Card>
-              <CardContent className="pt-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                  <div className="relative lg:col-span-2">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search name, phone, parent..."
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
+              <CardContent className="pt-4 space-y-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search name, phone, parent..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
                     <SelectContent>
@@ -292,14 +292,14 @@ export default function LeadsManagement() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex gap-3 mt-3">
-                  <div className="flex items-center gap-2">
-                    <Label className="text-sm whitespace-nowrap">From:</Label>
-                    <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-auto" />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">From</Label>
+                    <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Label className="text-sm whitespace-nowrap">To:</Label>
-                    <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-auto" />
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">To</Label>
+                    <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
                   </div>
                 </div>
               </CardContent>
