@@ -305,10 +305,83 @@ export default function LeadsManagement() {
               </CardContent>
             </Card>
 
-            {/* Leads Table */}
+            {/* Leads List */}
             <Card>
               <CardContent className="p-0">
-                <div className="overflow-x-auto">
+                {/* Mobile Cards */}
+                <div className="space-y-3 p-3 sm:hidden">
+                  {loading ? (
+                    <div className="text-center py-8 text-muted-foreground">Loading...</div>
+                  ) : filteredLeads.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">No leads found</div>
+                  ) : (
+                    filteredLeads.map(lead => {
+                      const assignedTeacher = teachers.find(t => t.id === lead.assigned_teacher_id);
+                      const createdByTeacher = teachers.find(t => t.user_id === lead.created_by);
+                      const teacherName = assignedTeacher?.full_name || createdByTeacher?.full_name || '—';
+                      return (
+                        <div key={lead.id} className="p-3 rounded-xl border bg-muted/10 space-y-2.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm">{lead.student_name}</p>
+                              <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                <LeadStatusBadge status={lead.status} />
+                                {lead.class_applying_for && (
+                                  <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{lead.class_applying_for}</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => fetchLeadDetails(lead)}><Eye className="h-3.5 w-3.5" /></Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingLead(lead); setShowForm(true); }}><Edit className="h-3.5 w-3.5" /></Button>
+                            </div>
+                          </div>
+                          <div className="space-y-1 text-xs">
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <Phone className="h-3 w-3 shrink-0" />
+                              <a href={`tel:${lead.primary_mobile}`} className="text-primary hover:underline">{lead.primary_mobile}</a>
+                            </div>
+                            {lead.father_name && (
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <UserPlus className="h-3 w-3 shrink-0" />
+                                <span>{lead.father_name}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <Users className="h-3 w-3 shrink-0" />
+                              <span>{teacherName}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between pt-1 border-t">
+                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                              {lead.next_followup_date && (
+                                <span className="flex items-center gap-0.5">
+                                  <Calendar className="h-3 w-3" />
+                                  {format(new Date(lead.next_followup_date), 'dd MMM')}
+                                </span>
+                              )}
+                              <span>{format(new Date(lead.created_at), 'dd MMM yyyy')}</span>
+                            </div>
+                            <div className="flex items-center gap-0.5">
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setCallLogLead(lead)}>
+                                <Phone className="h-3.5 w-3.5 text-green-600" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setStatusUpdateLead(lead); setNewStatus(lead.status); }}>
+                                <MessageSquare className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(lead.id)}>
+                                <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Desktop Table */}
+                <div className="overflow-x-auto hidden sm:block">
                   <Table>
                     <TableHeader>
                       <TableRow>

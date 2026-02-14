@@ -149,36 +149,94 @@ export default function TeacherLeads() {
 
         {/* Filters */}
         <Card>
-          <CardContent className="pt-4">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name, phone, parent..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  {LEAD_STATUSES.map(s => (
-                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <CardContent className="pt-4 space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, phone, parent..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
             </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                {LEAD_STATUSES.map(s => (
+                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </CardContent>
         </Card>
 
-        {/* Leads Table */}
+        {/* Leads List */}
         <Card>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            {/* Mobile Cards */}
+            <div className="space-y-3 p-3 sm:hidden">
+              {loading ? (
+                <div className="text-center py-8 text-muted-foreground">Loading...</div>
+              ) : filteredLeads.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">No leads found</div>
+              ) : (
+                filteredLeads.map(lead => (
+                  <div key={lead.id} className="p-3 rounded-xl border bg-muted/10 space-y-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm">{lead.student_name}</p>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                          <LeadStatusBadge status={lead.status} />
+                          {lead.class_applying_for && (
+                            <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{lead.class_applying_for}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => fetchLeadDetails(lead)}><Eye className="h-3.5 w-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingLead(lead); setShowForm(true); }}><Edit className="h-3.5 w-3.5" /></Button>
+                      </div>
+                    </div>
+                    <div className="space-y-1 text-xs">
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Phone className="h-3 w-3 shrink-0" />
+                        <a href={`tel:${lead.primary_mobile}`} className="text-primary hover:underline">{lead.primary_mobile}</a>
+                      </div>
+                      {lead.father_name && (
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <UserPlus className="h-3 w-3 shrink-0" />
+                          <span>{lead.father_name}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between pt-1 border-t">
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                        {lead.next_followup_date && (
+                          <span className="flex items-center gap-0.5">
+                            <Calendar className="h-3 w-3" />
+                            {format(new Date(lead.next_followup_date), 'dd MMM')}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-0.5">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setCallLogLead(lead)}>
+                          <Phone className="h-3.5 w-3.5 text-green-600" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setStatusUpdateLead(lead); setNewStatus(lead.status); }}>
+                          <MessageSquare className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Desktop Table */}
+            <div className="overflow-x-auto hidden sm:block">
               <Table>
                 <TableHeader>
                   <TableRow>
