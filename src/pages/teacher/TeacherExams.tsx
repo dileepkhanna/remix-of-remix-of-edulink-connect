@@ -187,18 +187,18 @@ export default function TeacherExams() {
           </Card>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 lg:w-[450px]">
-              <TabsTrigger value="enter" className="flex items-center gap-2">
-                <ClipboardList className="h-4 w-4" />
-                Enter Marks
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="enter" className="flex items-center gap-1 text-xs sm:text-sm">
+                <ClipboardList className="h-3.5 w-3.5" />
+                <span>Enter Marks</span>
               </TabsTrigger>
-              <TabsTrigger value="results" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Results
+              <TabsTrigger value="results" className="flex items-center gap-1 text-xs sm:text-sm">
+                <FileText className="h-3.5 w-3.5" />
+                <span>Results</span>
               </TabsTrigger>
-              <TabsTrigger value="view" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Student View
+              <TabsTrigger value="view" className="flex items-center gap-1 text-xs sm:text-sm">
+                <Users className="h-3.5 w-3.5" />
+                <span>Student</span>
               </TabsTrigger>
             </TabsList>
 
