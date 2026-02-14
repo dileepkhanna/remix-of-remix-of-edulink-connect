@@ -149,54 +149,54 @@ export default function StudentProgressView({ marks, studentName, showAnalytics 
 
       {/* Analytics Cards */}
       {showAnalytics && analytics && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <Card className="bg-gradient-to-br from-primary/10 to-primary/5">
-            <CardContent className="pt-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Average Score</p>
-                  <p className={`text-2xl font-bold ${getPercentageColor(analytics.average)}`}>
+            <CardContent className="p-3 sm:pt-4 sm:p-4">
+              <div className="flex items-center justify-between gap-1">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground">Average Score</p>
+                  <p className={`text-xl sm:text-2xl font-bold ${getPercentageColor(analytics.average)}`}>
                     {analytics.average.toFixed(1)}%
                   </p>
                 </div>
-                <BarChart3 className="h-8 w-8 text-primary/50" />
+                <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-primary/50 flex-shrink-0" />
               </div>
               <Progress value={analytics.average} className="mt-2 h-2" />
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Exams</p>
-                  <p className="text-2xl font-bold">{analytics.totalExams}</p>
+            <CardContent className="p-3 sm:pt-4 sm:p-4">
+              <div className="flex items-center justify-between gap-1">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground">Total Exams</p>
+                  <p className="text-xl sm:text-2xl font-bold">{analytics.totalExams}</p>
                 </div>
-                <BookOpen className="h-8 w-8 text-muted-foreground/50" />
+                <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/50 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-emerald-500/10">
-            <CardContent className="pt-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Best Subject</p>
-                  <p className="text-lg font-bold text-emerald-600 capitalize">{analytics.bestSubject}</p>
+            <CardContent className="p-3 sm:pt-4 sm:p-4">
+              <div className="flex items-center justify-between gap-1">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground">Best Subject</p>
+                  <p className="text-sm sm:text-lg font-bold text-emerald-600 capitalize truncate">{analytics.bestSubject}</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-emerald-500/50" />
+                <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-500/50 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-amber-500/10">
-            <CardContent className="pt-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Needs Work</p>
-                  <p className="text-lg font-bold text-amber-600 capitalize">{analytics.weakestSubject}</p>
+            <CardContent className="p-3 sm:pt-4 sm:p-4">
+              <div className="flex items-center justify-between gap-1">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground">Needs Work</p>
+                  <p className="text-sm sm:text-lg font-bold text-amber-600 capitalize truncate">{analytics.weakestSubject}</p>
                 </div>
-                <TrendingDown className="h-8 w-8 text-amber-500/50" />
+                <TrendingDown className="h-6 w-6 sm:h-8 sm:w-8 text-amber-500/50 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -206,18 +206,18 @@ export default function StudentProgressView({ marks, studentName, showAnalytics 
       {/* Results by Exam */}
       {Object.entries(groupedByExam).map(([examName, examMarks]) => (
         <Card key={examName} className="overflow-hidden">
-          <CardHeader className="pb-3 bg-muted/30">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Award className="h-4 w-4 text-primary" />
-                {examName}
+          <CardHeader className="pb-3 bg-muted/30 px-3 sm:px-6">
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-sm sm:text-base flex items-center gap-2 min-w-0">
+                <Award className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="truncate">{examName}</span>
               </CardTitle>
-              <Badge variant="outline">
+              <Badge variant="outline" className="flex-shrink-0 text-xs">
                 {examMarks.length} subject{examMarks.length > 1 ? 's' : ''}
               </Badge>
             </div>
             {examMarks[0]?.exams?.exam_date && (
-              <CardDescription>
+              <CardDescription className="text-xs">
                 {new Date(examMarks[0].exams.exam_date).toLocaleDateString('en-IN', { 
                   day: 'numeric', month: 'long', year: 'numeric' 
                 })}
@@ -229,11 +229,11 @@ export default function StudentProgressView({ marks, studentName, showAnalytics 
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/20">
-                    <TableHead className="min-w-[100px]">Subject</TableHead>
-                    <TableHead className="text-center min-w-[80px]">Marks</TableHead>
-                    <TableHead className="text-center min-w-[80px]">%</TableHead>
-                    <TableHead className="text-center min-w-[60px]">Grade</TableHead>
-                    <TableHead className="min-w-[120px] hidden sm:table-cell">Remarks</TableHead>
+                    <TableHead className="min-w-[80px] text-xs sm:text-sm">Subject</TableHead>
+                    <TableHead className="text-center min-w-[70px] text-xs sm:text-sm">Marks</TableHead>
+                    <TableHead className="text-center min-w-[50px] text-xs sm:text-sm">%</TableHead>
+                    <TableHead className="text-center min-w-[50px] text-xs sm:text-sm">Grade</TableHead>
+                    <TableHead className="min-w-[100px] hidden sm:table-cell text-xs sm:text-sm">Remarks</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -243,24 +243,24 @@ export default function StudentProgressView({ marks, studentName, showAnalytics 
                       : 0;
                     return (
                       <TableRow key={mark.id}>
-                        <TableCell className="font-medium capitalize text-sm">
+                        <TableCell className="font-medium capitalize text-xs sm:text-sm py-2">
                           {mark.exams?.subjects?.name || '-'}
                         </TableCell>
-                        <TableCell className="text-center text-sm">
+                        <TableCell className="text-center text-xs sm:text-sm py-2">
                           <span className="font-semibold">{mark.marks_obtained ?? '-'}</span>
-                          <span className="text-muted-foreground text-xs">/{mark.exams?.max_marks ?? 100}</span>
+                          <span className="text-muted-foreground text-[10px] sm:text-xs">/{mark.exams?.max_marks ?? 100}</span>
                         </TableCell>
-                        <TableCell className="text-center">
-                          <span className={`font-semibold text-sm ${getPercentageColor(pct)}`}>
+                        <TableCell className="text-center py-2">
+                          <span className={`font-semibold text-xs sm:text-sm ${getPercentageColor(pct)}`}>
                             {pct.toFixed(0)}%
                           </span>
                         </TableCell>
-                        <TableCell className="text-center">
-                          <Badge className={`text-xs ${getGradeColor(mark.grade)}`}>
+                        <TableCell className="text-center py-2">
+                          <Badge className={`text-[10px] sm:text-xs ${getGradeColor(mark.grade)}`}>
                             {mark.grade || '-'}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-xs text-muted-foreground hidden sm:table-cell">
+                        <TableCell className="text-xs text-muted-foreground hidden sm:table-cell py-2">
                           {mark.remarks || '-'}
                         </TableCell>
                       </TableRow>
