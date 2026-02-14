@@ -1,116 +1,86 @@
 
-# Plan: Fix Certificate Request Error and Enhance Messaging System
 
-## Issues Identified
+# Mobile Bottom Navigation Bar Implementation Plan
 
-### Issue 1: Certificate Request Error
-The database has a check constraint `certificate_requests_certificate_type_check` that only allows these values:
-- `bonafide`
-- `transfer`
-- `character`
+## Overview
+Transform the mobile experience from a slide-out sidebar to a native app-style bottom navigation bar with 4 primary action buttons + a "More" menu, while keeping the desktop sidebar completely unchanged.
 
-But the frontend is sending full names like `Bonafide Certificate`, `Transfer Certificate`, etc., causing the constraint violation.
+## How It Will Work
 
-### Issue 2: Messaging System Enhancement
-Current messaging is limited - parents can only message teachers in their child's class. The request is to:
-1. **Parents**: Should be able to message their child's class teacher AND the principal
-2. **Teachers & Principal (Admin)**: Should be able to send messages by selecting a class and then a student, to reach the parent
+- On mobile screens (below 768px), the current hamburger menu sidebar will be replaced with a **fixed bottom navigation bar** showing 4-5 key buttons
+- A **"More" button** will open a slide-up sheet containing all remaining menu items
+- The **desktop sidebar remains exactly as-is** -- no changes for laptop/desktop users
+- Each role (Admin, Teacher, Parent) gets its own set of primary bottom tabs
 
----
+## Bottom Navigation Tabs Per Role
 
-## Solution
+### Admin (4 tabs + More)
+1. Dashboard
+2. Students
+3. Attendance
+4. Messages
+5. More (opens sheet with: Teachers, Classes, Subjects, Timetable, Exams, Leads, Announcements, Leave, Certificates, Complaints, Fees, Gallery, Settings)
 
-### Part 1: Fix Certificate Types
+### Teacher (4 tabs + More)
+1. Dashboard
+2. Attendance
+3. Homework
+4. Messages
+5. More (opens sheet with: My Classes, Students, Exam Marks, Reports, Announcements, Leave, Gallery, Leads)
 
-**Database Migration:**
-Update the check constraint to accept the full certificate type names used in the UI:
-- `Bonafide Certificate`
-- `Transfer Certificate`
-- `Character Certificate`
-- `Study Certificate`
-- `Migration Certificate`
-- `Conduct Certificate`
+### Parent (4 tabs + More)
+1. Dashboard
+2. Attendance
+3. Exams
+4. Messages
+5. More (opens sheet with: My Child, Timetable, Homework, Progress, Announcements, Leave, Certificates, Gallery, Pay Fees)
 
-### Part 2: Enhance Messaging System
-
-#### For Parents (ParentMessages.tsx + MessagingInterface.tsx):
-- Modify contact loading to also include:
-  - **Class Teacher** (identified via `class_teacher_id` on the `classes` table)
-  - **Principal** (the admin user from `user_roles` table)
-- Show role labels like "Class Teacher" and "Principal" for clarity
-
-#### For Teachers (TeacherMessages.tsx + MessagingInterface.tsx):
-- Add class and student selection filters at the top
-- Teachers can pick a class, then see students in that class
-- Selecting a student shows the linked parent as the recipient
-- Maintain existing conversation list below
-
-#### For Principal/Admin:
-- Create new `AdminMessages.tsx` page with messaging interface
-- Add "Messages" to admin sidebar
-- Admin can select any class, then any student to message parents
-- Admin can also view incoming messages from parents
-
-#### MessagingInterface Updates:
-- Add a new prop `currentUserRole` that now supports `'teacher' | 'parent' | 'admin'`
-- For admin role, load all classes and allow selection
-- Add filters UI for class/student selection when role is teacher or admin
-- Keep the conversation list but add a "New Message" button with class/student picker
-
----
+## Visual Design
+- Fixed to bottom of screen, white/card background with top border
+- Active tab highlighted with role-specific color
+- Icons on top, small labels below each icon
+- "More" button uses a grid/dots icon
+- The "More" sheet slides up from bottom with a grid of all remaining items
+- Content area gets bottom padding (about 70px) on mobile to avoid overlap
 
 ## Technical Details
 
-### Files to Create:
-1. `src/pages/admin/AdminMessages.tsx` - Admin messaging page
+### Files to Create
+1. **`src/components/layouts/MobileBottomNav.tsx`** -- New component containing:
+   - Bottom navigation bar with role-based tabs
+   - "More" sheet using the existing `Sheet` component (slides from bottom)
+   - Uses `useIsMobile()` hook to only render on mobile
+   - Accepts `sidebarItems` and `roleColor` props (same as DashboardLayout)
+   - Configured primary items per role via a mapping object
 
-### Files to Modify:
-1. `src/config/adminSidebar.tsx` - Add Messages menu item
-2. `src/App.tsx` - Add admin messages route
-3. `src/components/messaging/MessagingInterface.tsx` - Major refactor:
-   - Accept `'admin'` as a role option
-   - Add class/student selection for teachers and admins
-   - Include principal and class teacher contacts for parents
-4. `src/pages/parent/ParentCertificates.tsx` - Update certificate types to use lowercase keys
+### Files to Modify
+1. **`src/components/layouts/DashboardLayout.tsx`**:
+   - Import and render `MobileBottomNav` component
+   - Remove the mobile hamburger menu button from the header on mobile
+   - Remove the mobile sidebar overlay and slide-out sidebar
+   - Add bottom padding to `<main>` on mobile (via `pb-20 lg:pb-0`)
+   - Keep all desktop sidebar code untouched
 
-### Database Migration:
-```sql
--- Drop existing constraint and add new one with all certificate types
-ALTER TABLE certificate_requests 
-DROP CONSTRAINT IF EXISTS certificate_requests_certificate_type_check;
+### No Other Files Change
+- Sidebar configs (`adminSidebar.tsx`, `teacherSidebar.tsx`, `parentSidebar.tsx`) stay the same
+- All page components stay the same
+- Routing stays the same
 
-ALTER TABLE certificate_requests 
-ADD CONSTRAINT certificate_requests_certificate_type_check 
-CHECK (certificate_type = ANY (ARRAY[
-  'Bonafide Certificate',
-  'Transfer Certificate', 
-  'Character Certificate',
-  'Study Certificate',
-  'Migration Certificate',
-  'Conduct Certificate'
-]));
+### Component Structure
+
+```text
+DashboardLayout
++-- Desktop Sidebar (hidden on mobile, unchanged)
++-- Main Content Area (added bottom padding on mobile)
++-- MobileBottomNav (visible only on mobile)
+    +-- 4 primary tab buttons
+    +-- "More" button -> opens Sheet (side="bottom")
+        +-- Grid of remaining menu items
 ```
 
----
-
-## UI Flow After Changes
-
-### Parent Messaging:
-- Open Messages page
-- See contacts list with:
-  - "Principal" (always available)
-  - "Class Teacher - [Name]" (child's class teacher)
-  - Any teachers assigned to the class
-- Select contact and chat
-
-### Teacher Messaging:
-- Open Messages page
-- See "New Message" button with class/student picker
-- Existing conversations listed below
-- Can select class then student to start new conversation with parent
-
-### Admin/Principal Messaging:
-- Open Messages page from admin sidebar
-- See all incoming messages from parents
-- Use class/student picker to compose new messages
-- Full access to message any parent
+### Key Implementation Notes
+- The `MobileBottomNav` component determines which 4 items to show based on `roleColor` prop
+- Remaining items go into the "More" sheet automatically
+- Active route highlighting uses `useLocation()` from react-router-dom
+- The existing `useIsMobile()` hook handles responsive detection
+- The "More" sheet closes automatically when a menu item is tapped
