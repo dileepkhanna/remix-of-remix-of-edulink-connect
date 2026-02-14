@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Users, Shield, BookOpen, Loader2 } from 'lucide-react';
+import { Users, Shield, BookOpen, Loader2, GraduationCap } from 'lucide-react';
 
 export default function Index() {
   const { user, userRole, loading } = useAuth();
@@ -30,8 +30,8 @@ export default function Index() {
         
         <div className="container mx-auto px-4 py-16 lg:py-24 relative">
           <div className="max-w-3xl mx-auto text-center animate-fade-in">
-             <div className="inline-flex items-center justify-center mb-8">
-              <img src="/ase-logo.jpg" alt="ASE Tech Logo" className="h-24 w-auto object-contain" />
+             <div className="inline-flex items-center justify-center mb-8 h-24 w-24 rounded-2xl bg-primary/10">
+              <GraduationCap className="h-12 w-12 text-primary" />
             </div>
             
             <h1 className="font-display text-4xl lg:text-5xl font-bold text-foreground mb-6">

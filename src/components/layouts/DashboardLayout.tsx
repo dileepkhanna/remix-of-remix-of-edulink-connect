@@ -286,7 +286,9 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
           <div className="flex items-center gap-4">
             {/* Mobile: Logo + Name */}
             <div className="flex items-center gap-2 lg:hidden">
-              <img src="/ase-logo.jpg" alt="School Logo" className="h-9 w-9 rounded-lg object-cover" />
+              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                <GraduationCap className="h-5 w-5 text-primary" />
+              </div>
               <h1 className="font-display font-bold text-base leading-tight">SmartEduConnect</h1>
             </div>
             {/* Desktop: Page title */}
