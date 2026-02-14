@@ -530,77 +530,133 @@ export default function TimetableManagement() {
                     No classes found. Please <a href="/admin/classes" className="underline text-primary">add classes</a> first.
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr>
-                          <th className="border p-2 bg-muted text-sm min-w-[100px]">Time</th>
-                          {DAYS.map((day) => (
-                            <th key={day} className="border p-2 bg-muted text-sm font-medium">{day}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {schedule.map((slot, index) => (
-                          slot.isBreak ? (
-                            <tr key={`break-${index}`} className="bg-amber-50 dark:bg-amber-950/30">
-                              <td className="border p-2 text-center" colSpan={DAYS.length + 1}>
-                                <div className="flex items-center justify-center gap-2 text-amber-600 dark:text-amber-400">
-                                  <Coffee className="h-4 w-4" />
+                  <>
+                    {/* Mobile: Day-by-day cards */}
+                    <div className="space-y-4 sm:hidden">
+                      {DAYS.map((day) => (
+                        <div key={day} className="rounded-xl border bg-muted/10 overflow-hidden">
+                          <div className="px-3 py-2 bg-muted/50 font-semibold text-sm">{day}</div>
+                          <div className="divide-y">
+                            {schedule.map((slot, index) =>
+                              slot.isBreak ? (
+                                <div key={`break-${index}`} className="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 text-xs">
+                                  <Coffee className="h-3 w-3 shrink-0" />
                                   <span className="font-medium">{slot.breakName}</span>
-                                  <span className="text-sm">({slot.startTime} - {slot.endTime})</span>
+                                  <span className="text-[10px]">({slot.startTime}-{slot.endTime})</span>
                                 </div>
-                              </td>
-                            </tr>
-                          ) : (
-                            <tr key={`period-${slot.number}`}>
-                              <td className="border p-2 text-center font-medium bg-muted/50 text-sm">
-                                <div className="font-semibold">Period {slot.number}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {slot.startTime} - {slot.endTime}
-                                </div>
-                              </td>
-                              {DAYS.map((day) => {
-                                const entry = getEntryForSlot(day, slot.number);
-                                return (
-                                  <td 
-                                    key={day} 
-                                    className={cn(
-                                      "border p-2 min-w-[130px] h-[80px] cursor-pointer transition-colors hover:bg-muted/50",
-                                      !entry && "bg-muted/20"
-                                    )}
-                                    onClick={() => handleCellClick(day, slot.number)}
-                                  >
-                                    {entry ? (
-                                      <div className="text-xs space-y-1">
-                                        <div className="font-semibold text-primary truncate">{entry.subjects?.name || 'N/A'}</div>
-                                        <div className="text-muted-foreground truncate">{entry.teacherName || '-'}</div>
-                                        <Badge 
-                                          variant={entry.is_published ? "default" : "secondary"} 
-                                          className="text-[10px] h-4"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            togglePublish(entry.id, entry.is_published);
-                                          }}
+                              ) : (
+                                <div
+                                  key={`p-${slot.number}`}
+                                  className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-muted/30 transition-colors"
+                                  onClick={() => handleCellClick(day, slot.number)}
+                                >
+                                  <div className="shrink-0 text-center w-12">
+                                    <div className="text-[10px] text-muted-foreground font-medium">P{slot.number}</div>
+                                    <div className="text-[10px] text-muted-foreground">{slot.startTime}</div>
+                                  </div>
+                                  {(() => {
+                                    const entry = getEntryForSlot(day, slot.number);
+                                    return entry ? (
+                                      <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
+                                        <div className="min-w-0">
+                                          <p className="text-sm font-semibold text-primary truncate">{entry.subjects?.name || 'N/A'}</p>
+                                          <p className="text-xs text-muted-foreground truncate">{entry.teacherName || '-'}</p>
+                                        </div>
+                                        <Badge
+                                          variant={entry.is_published ? "default" : "secondary"}
+                                          className="text-[10px] h-5 shrink-0"
+                                          onClick={(e) => { e.stopPropagation(); togglePublish(entry.id, entry.is_published); }}
                                         >
-                                          {entry.is_published ? <Eye className="h-2 w-2 mr-1" /> : <EyeOff className="h-2 w-2 mr-1" />}
                                           {entry.is_published ? 'Live' : 'Draft'}
                                         </Badge>
                                       </div>
                                     ) : (
-                                      <div className="h-full flex items-center justify-center text-muted-foreground/50">
-                                        <Plus className="h-4 w-4" />
+                                      <div className="flex-1 flex items-center text-muted-foreground/50 text-xs gap-1">
+                                        <Plus className="h-3 w-3" /> Add
                                       </div>
-                                    )}
-                                  </td>
-                                );
-                              })}
-                            </tr>
-                          )
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                                    );
+                                  })()}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Desktop: Full grid table */}
+                    <div className="overflow-x-auto hidden sm:block">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr>
+                            <th className="border p-2 bg-muted text-sm min-w-[100px]">Time</th>
+                            {DAYS.map((day) => (
+                              <th key={day} className="border p-2 bg-muted text-sm font-medium">{day}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {schedule.map((slot, index) => (
+                            slot.isBreak ? (
+                              <tr key={`break-${index}`} className="bg-amber-50 dark:bg-amber-950/30">
+                                <td className="border p-2 text-center" colSpan={DAYS.length + 1}>
+                                  <div className="flex items-center justify-center gap-2 text-amber-600 dark:text-amber-400">
+                                    <Coffee className="h-4 w-4" />
+                                    <span className="font-medium">{slot.breakName}</span>
+                                    <span className="text-sm">({slot.startTime} - {slot.endTime})</span>
+                                  </div>
+                                </td>
+                              </tr>
+                            ) : (
+                              <tr key={`period-${slot.number}`}>
+                                <td className="border p-2 text-center font-medium bg-muted/50 text-sm">
+                                  <div className="font-semibold">Period {slot.number}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {slot.startTime} - {slot.endTime}
+                                  </div>
+                                </td>
+                                {DAYS.map((day) => {
+                                  const entry = getEntryForSlot(day, slot.number);
+                                  return (
+                                    <td 
+                                      key={day} 
+                                      className={cn(
+                                        "border p-2 min-w-[130px] h-[80px] cursor-pointer transition-colors hover:bg-muted/50",
+                                        !entry && "bg-muted/20"
+                                      )}
+                                      onClick={() => handleCellClick(day, slot.number)}
+                                    >
+                                      {entry ? (
+                                        <div className="text-xs space-y-1">
+                                          <div className="font-semibold text-primary truncate">{entry.subjects?.name || 'N/A'}</div>
+                                          <div className="text-muted-foreground truncate">{entry.teacherName || '-'}</div>
+                                          <Badge 
+                                            variant={entry.is_published ? "default" : "secondary"} 
+                                            className="text-[10px] h-4"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              togglePublish(entry.id, entry.is_published);
+                                            }}
+                                          >
+                                            {entry.is_published ? <Eye className="h-2 w-2 mr-1" /> : <EyeOff className="h-2 w-2 mr-1" />}
+                                            {entry.is_published ? 'Live' : 'Draft'}
+                                          </Badge>
+                                        </div>
+                                      ) : (
+                                        <div className="h-full flex items-center justify-center text-muted-foreground/50">
+                                          <Plus className="h-4 w-4" />
+                                        </div>
+                                      )}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            )
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>
@@ -625,7 +681,7 @@ export default function TimetableManagement() {
                   </SelectContent>
                 </Select>
                 {selectedTeacherName && (
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-muted-foreground hidden sm:inline">
                     Viewing schedule for: <strong>{selectedTeacherName}</strong>
                   </span>
                 )}
@@ -698,10 +754,8 @@ export default function TimetableManagement() {
                                 </div>
                                 <div className="flex-1">
                                   <p className="font-medium text-sm">{entry.subjects?.name || 'Free Period'}</p>
-                                  <p className="text-xs text-muted-foreground">{entry.className}</p>
-                                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    {entry.start_time?.slice(0, 5)} - {entry.end_time?.slice(0, 5)}
+                                  <p className="text-xs text-muted-foreground">
+                                    {entry.className} • {entry.start_time?.slice(0, 5)} - {entry.end_time?.slice(0, 5)}
                                   </p>
                                 </div>
                               </div>
@@ -717,221 +771,144 @@ export default function TimetableManagement() {
           </TabsContent>
         </Tabs>
 
-        {/* Click-to-fill Dialog */}
+        {/* Entry Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display">
                 {existingEntry ? 'Edit Period' : 'Add Period'}
               </DialogTitle>
               <DialogDescription>
-                {selectedCell && `${selectedCell.day}, Period ${selectedCell.period}`}
+                {selectedCell ? `${selectedCell.day} - Period ${selectedCell.period}` : ''}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSaveEntry} className="space-y-4">
               <div className="space-y-2">
                 <Label>Subject</Label>
-                <Select 
-                  value={formData.subjectId || "none"} 
-                  onValueChange={(v) => setFormData({ ...formData, subjectId: v === "none" ? "" : v })}
-                >
+                <Select value={formData.subjectId} onValueChange={(v) => setFormData({ ...formData, subjectId: v })}>
                   <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">-- No Subject --</SelectItem>
                     {subjects.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.name} {s.code && `(${s.code})`}
-                      </SelectItem>
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
                 <Label>Teacher</Label>
-                <Select 
-                  value={formData.teacherId || "none"} 
-                  onValueChange={(v) => setFormData({ ...formData, teacherId: v === "none" ? "" : v })}
-                >
+                <Select value={formData.teacherId} onValueChange={(v) => setFormData({ ...formData, teacherId: v })}>
                   <SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">-- No Teacher --</SelectItem>
                     {teachers.map((t) => (
                       <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Start Time</Label>
-                  <Input 
-                    type="time" 
-                    value={formData.startTime} 
-                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} 
-                  />
+                  <Input type="time" value={formData.startTime} onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} />
                 </div>
                 <div className="space-y-2">
                   <Label>End Time</Label>
-                  <Input 
-                    type="time" 
-                    value={formData.endTime} 
-                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} 
-                  />
+                  <Input type="time" value={formData.endTime} onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} />
                 </div>
               </div>
 
-              <DialogFooter className="flex gap-2">
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 pt-2">
                 {existingEntry && (
-                  <Button 
-                    type="button" 
-                    variant="destructive" 
-                    onClick={handleDeleteEntry}
-                    disabled={isSubmitting}
-                  >
+                  <Button type="button" variant="destructive" onClick={handleDeleteEntry} disabled={isSubmitting}>
                     <Trash2 className="h-4 w-4 mr-2" />Delete
                   </Button>
                 )}
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  {existingEntry ? 'Update' : 'Add'}
-                </Button>
-              </DialogFooter>
+                <div className="flex flex-col-reverse sm:flex-row gap-2 sm:ml-auto">
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+                  <Button type="submit" disabled={isSubmitting} className="gradient-admin">
+                    {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    {existingEntry ? 'Update' : 'Add'}
+                  </Button>
+                </div>
+              </div>
             </form>
           </DialogContent>
         </Dialog>
 
         {/* Schedule Configuration Dialog */}
         <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
-          <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display flex items-center gap-2">
                 <Settings className="h-5 w-5" />
-                Configure Periods & Breaks
+                Schedule Configuration
               </DialogTitle>
-              <DialogDescription>
-                Add, remove, or modify periods and breaks in the timetable schedule
-              </DialogDescription>
+              <DialogDescription>Configure periods, breaks, and timings</DialogDescription>
             </DialogHeader>
-            
             <div className="space-y-4">
-              <div className="flex gap-2">
-                <Button onClick={addPeriod} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />Add Period
-                </Button>
-                <Button onClick={addBreak} size="sm" variant="outline">
-                  <Coffee className="h-4 w-4 mr-2" />Add Break
-                </Button>
-                <Button onClick={resetToDefault} size="sm" variant="ghost">
-                  Reset to Default
-                </Button>
+              <div className="flex gap-2 flex-wrap">
+                <Button variant="outline" size="sm" onClick={addPeriod}><Plus className="h-4 w-4 mr-1" />Add Period</Button>
+                <Button variant="outline" size="sm" onClick={addBreak}><Coffee className="h-4 w-4 mr-1" />Add Break</Button>
+                <Button variant="outline" size="sm" onClick={resetToDefault}>Reset Default</Button>
               </div>
-
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-[50vh] overflow-y-auto">
                 {schedule.map((slot, index) => (
-                  <div 
-                    key={index} 
-                    className={cn(
-                      "flex items-center gap-3 p-3 rounded-lg border",
-                      slot.isBreak ? "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800" : "bg-muted/30"
-                    )}
-                  >
-                    <div className="flex-1">
+                  <div key={index} className={cn("flex items-center justify-between p-3 rounded-lg border", slot.isBreak ? "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800" : "bg-muted/30")}>
+                    <div className="flex items-center gap-3">
                       {slot.isBreak ? (
-                        <div className="flex items-center gap-2">
-                          <Coffee className="h-4 w-4 text-amber-600" />
-                          <span className="font-medium text-amber-600 dark:text-amber-400">{slot.breakName}</span>
-                        </div>
+                        <Coffee className="h-4 w-4 text-amber-600" />
                       ) : (
-                        <span className="font-medium">Period {slot.number}</span>
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">{slot.number}</div>
                       )}
+                      <div>
+                        <p className="font-medium text-sm">{slot.isBreak ? slot.breakName : `Period ${slot.number}`}</p>
+                        <p className="text-xs text-muted-foreground">{slot.startTime} - {slot.endTime}</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      {slot.startTime} - {slot.endTime}
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openSlotEditor(slot, index)}>
+                        <Settings className="h-3 w-3" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeSlot(index)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => openSlotEditor(slot, index)}
-                    >
-                      Edit
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => removeSlot(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
                   </div>
                 ))}
               </div>
             </div>
-
-            <DialogFooter>
-              <Button onClick={() => setConfigDialogOpen(false)}>Done</Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
 
-        {/* Slot Edit Dialog */}
+        {/* Slot Editor Dialog */}
         <Dialog open={slotDialogOpen} onOpenChange={setSlotDialogOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-sm">
             <DialogHeader>
-              <DialogTitle className="font-display">
-                Edit {editingSlot?.isBreak ? 'Break' : 'Period'}
-              </DialogTitle>
+              <DialogTitle>Edit Slot</DialogTitle>
             </DialogHeader>
-            
             {editingSlot && (
               <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <Label>Is Break?</Label>
-                  <Switch 
-                    checked={editingSlot.isBreak}
-                    onCheckedChange={(checked) => setEditingSlot({ 
-                      ...editingSlot, 
-                      isBreak: checked,
-                      breakName: checked ? (editingSlot.breakName || 'Break') : ''
-                    })}
-                  />
+                <div className="flex items-center gap-2">
+                  <Switch checked={editingSlot.isBreak} onCheckedChange={(checked) => setEditingSlot({ ...editingSlot, isBreak: checked })} />
+                  <Label>Is Break</Label>
                 </div>
-
                 {editingSlot.isBreak && (
                   <div className="space-y-2">
                     <Label>Break Name</Label>
-                    <Input 
-                      value={editingSlot.breakName}
-                      onChange={(e) => setEditingSlot({ ...editingSlot, breakName: e.target.value })}
-                      placeholder="e.g., Lunch Break, Short Break"
-                    />
+                    <Input value={editingSlot.breakName} onChange={(e) => setEditingSlot({ ...editingSlot, breakName: e.target.value })} />
                   </div>
                 )}
-
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Start Time</Label>
-                    <Input 
-                      type="time" 
-                      value={editingSlot.startTime}
-                      onChange={(e) => setEditingSlot({ ...editingSlot, startTime: e.target.value })}
-                    />
+                    <Input type="time" value={editingSlot.startTime} onChange={(e) => setEditingSlot({ ...editingSlot, startTime: e.target.value })} />
                   </div>
                   <div className="space-y-2">
                     <Label>End Time</Label>
-                    <Input 
-                      type="time" 
-                      value={editingSlot.endTime}
-                      onChange={(e) => setEditingSlot({ ...editingSlot, endTime: e.target.value })}
-                    />
+                    <Input type="time" value={editingSlot.endTime} onChange={(e) => setEditingSlot({ ...editingSlot, endTime: e.target.value })} />
                   </div>
                 </div>
               </div>
             )}
-
             <DialogFooter>
               <Button variant="outline" onClick={() => setSlotDialogOpen(false)}>Cancel</Button>
               <Button onClick={saveSlotEdit}>Save Changes</Button>
