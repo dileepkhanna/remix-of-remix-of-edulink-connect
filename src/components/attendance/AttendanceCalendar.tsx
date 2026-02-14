@@ -129,19 +129,19 @@ export default function AttendanceCalendar({ attendance, childName, className = 
     <>
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={goToPrev}><ChevronLeft className="h-4 w-4" /></Button>
-              <CardTitle className="text-lg font-display">{format(currentMonth, 'MMMM yyyy')}</CardTitle>
-              <Button variant="ghost" size="icon" onClick={goToNext}><ChevronRight className="h-4 w-4" /></Button>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1 min-w-0">
+              <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={goToPrev}><ChevronLeft className="h-4 w-4" /></Button>
+              <CardTitle className="text-base sm:text-lg font-display whitespace-nowrap">{format(currentMonth, 'MMMM yyyy')}</CardTitle>
+              <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={goToNext}><ChevronRight className="h-4 w-4" /></Button>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="gap-1">
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <Badge variant="outline" className="gap-1 text-xs whitespace-nowrap">
                 <span className="font-bold text-primary">{monthPct}%</span> attendance
               </Badge>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm"><Download className="h-4 w-4" /></Button>
+                  <Button variant="outline" size="icon" className="h-8 w-8"><Download className="h-4 w-4" /></Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={handleDownloadCSV}>
