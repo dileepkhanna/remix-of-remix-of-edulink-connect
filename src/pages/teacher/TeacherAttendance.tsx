@@ -349,51 +349,50 @@ export default function TeacherAttendance() {
         </Card>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <Card className="card-elevated col-span-2 lg:col-span-1">
-            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-primary" />
+        <div className="grid grid-cols-5 gap-2 sm:gap-3">
+          <Card className="card-elevated">
+            <CardContent className="p-2 sm:p-4 flex flex-col items-center justify-center gap-0.5 sm:gap-1">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               </div>
-              <p className="text-2xl font-bold text-primary">{attendanceRate}%</p>
-              <p className="text-xs text-muted-foreground font-medium">Rate</p>
-              <Progress value={attendanceRate} className="h-1.5 w-full mt-1" />
+              <p className="text-lg sm:text-2xl font-bold text-primary">{attendanceRate}%</p>
+              <p className="text-[9px] sm:text-xs text-muted-foreground font-medium">Rate</p>
             </CardContent>
           </Card>
           <Card className="card-elevated">
-            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                <Users className="h-5 w-5 text-foreground" />
+            <CardContent className="p-2 sm:p-4 flex flex-col items-center justify-center gap-0.5 sm:gap-1">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-muted flex items-center justify-center">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 text-foreground" />
               </div>
-              <p className="text-2xl font-bold">{totalStudents}</p>
-              <p className="text-xs text-muted-foreground font-medium">Total</p>
+              <p className="text-lg sm:text-2xl font-bold">{totalStudents}</p>
+              <p className="text-[9px] sm:text-xs text-muted-foreground font-medium">Total</p>
             </CardContent>
           </Card>
           <Card className="card-elevated">
-            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
-              <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
-                <CheckCircle2 className="h-5 w-5 text-success" />
+            <CardContent className="p-2 sm:p-4 flex flex-col items-center justify-center gap-0.5 sm:gap-1">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-success/10 flex items-center justify-center">
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-success" />
               </div>
-              <p className="text-2xl font-bold text-success">{presentCount}</p>
-              <p className="text-xs text-muted-foreground font-medium">Present</p>
+              <p className="text-lg sm:text-2xl font-bold text-success">{presentCount}</p>
+              <p className="text-[9px] sm:text-xs text-muted-foreground font-medium">Present</p>
             </CardContent>
           </Card>
           <Card className="card-elevated">
-            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
-              <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
-                <XCircle className="h-5 w-5 text-destructive" />
+            <CardContent className="p-2 sm:p-4 flex flex-col items-center justify-center gap-0.5 sm:gap-1">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-destructive" />
               </div>
-              <p className="text-2xl font-bold text-destructive">{absentCount}</p>
-              <p className="text-xs text-muted-foreground font-medium">Absent</p>
+              <p className="text-lg sm:text-2xl font-bold text-destructive">{absentCount}</p>
+              <p className="text-[9px] sm:text-xs text-muted-foreground font-medium">Absent</p>
             </CardContent>
           </Card>
           <Card className="card-elevated">
-            <CardContent className="p-4 flex flex-col items-center justify-center gap-1">
-              <div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center">
-                <Clock className="h-5 w-5 text-warning" />
+            <CardContent className="p-2 sm:p-4 flex flex-col items-center justify-center gap-0.5 sm:gap-1">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-warning/10 flex items-center justify-center">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-warning" />
               </div>
-              <p className="text-2xl font-bold text-warning">{lateCount}</p>
-              <p className="text-xs text-muted-foreground font-medium">Late</p>
+              <p className="text-lg sm:text-2xl font-bold text-warning">{lateCount}</p>
+              <p className="text-[9px] sm:text-xs text-muted-foreground font-medium">Late</p>
             </CardContent>
           </Card>
         </div>
@@ -522,8 +521,8 @@ export default function TeacherAttendance() {
             </Card>
 
             {/* Bottom Action Bar */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 rounded-xl bg-card border shadow-sm sticky bottom-4">
-              <div className="text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-xl bg-card border shadow-sm sticky bottom-20 lg:bottom-4 z-10">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 <span className="font-medium text-foreground">{totalStudents}</span> students &middot;{' '}
                 <span className="text-success font-medium">{presentCount}</span> present &middot;{' '}
                 <span className="text-destructive font-medium">{absentCount}</span> absent &middot;{' '}
@@ -533,8 +532,8 @@ export default function TeacherAttendance() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" disabled={students.length === 0}>
-                      <Download className="h-4 w-4 mr-2" />
-                      Export
+                      <Download className="h-4 w-4 mr-1.5" />
+                      <span className="text-xs">Export</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -548,9 +547,9 @@ export default function TeacherAttendance() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button onClick={saveAttendance} disabled={saving} className="gap-2">
+                <Button onClick={saveAttendance} disabled={saving} size="sm" className="gap-1.5">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  Save Attendance
+                  <span className="text-xs">Save Attendance</span>
                 </Button>
               </div>
             </div>
