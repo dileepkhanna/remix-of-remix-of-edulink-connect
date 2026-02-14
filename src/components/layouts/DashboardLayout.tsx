@@ -1,5 +1,6 @@
 import { ReactNode, useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import MobileBottomNav from './MobileBottomNav';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -22,8 +23,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  Menu,
-  X,
   LogOut,
   User,
   Bell,
@@ -73,7 +72,6 @@ interface ProfileDetails {
 
 export default function DashboardLayout({ children, sidebarItems, roleColor }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [displayName, setDisplayName] = useState<string>('');
   const [photoUrl, setPhotoUrl] = useState<string>('');
   const [profileOpen, setProfileOpen] = useState(false);
@@ -281,74 +279,11 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
         </div>
       </aside>
 
-      {/* Mobile Sidebar Overlay */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* Mobile Sidebar */}
-      <aside
-        className={cn(
-          "fixed left-0 top-0 bottom-0 w-64 bg-sidebar text-sidebar-foreground z-50 transform transition-transform duration-300 lg:hidden flex flex-col",
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full",
-          roleColor === 'teacher' && "sidebar-teacher",
-          roleColor === 'parent' && "sidebar-parent"
-        )}
-      >
-        <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border flex-shrink-0">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="h-9 w-9 flex-shrink-0 rounded-lg bg-primary/10 flex items-center justify-center">
-              <GraduationCap className="h-5 w-5 text-primary" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="font-display font-bold text-base leading-tight truncate">SmartEduConnect</h1>
-              <p className="text-[10px] text-sidebar-foreground/60 truncate">{roleLabel}</p>
-            </div>
-          </div>
-          <button onClick={() => setMobileMenuOpen(false)}>
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-          {sidebarItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <button
-                key={item.path}
-                onClick={() => {
-                  navigate(item.path);
-                  setMobileMenuOpen(false);
-                }}
-                className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-primary font-medium"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                )}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-      </aside>
-
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* Header */}
         <header className="h-16 bg-card border-b flex items-center justify-between px-4 lg:px-6">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 hover:bg-muted rounded-lg"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
             <div className="hidden sm:block">
               <h2 className="font-display font-semibold text-lg">
                 {sidebarItems.find(item => item.path === location.pathname)?.label || 'Dashboard'}
@@ -393,7 +328,7 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
 
         {/* Page Content */}
         <main
-          className="flex-1 p-4 lg:p-6 overflow-y-auto"
+          className="flex-1 p-4 lg:p-6 pb-20 lg:pb-6 overflow-y-auto"
           style={roleColor === 'teacher' ? {
             '--primary': '152 35% 16%',
             '--primary-foreground': '0 0% 100%',
@@ -586,6 +521,9 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
           ) : null}
         </DialogContent>
       </Dialog>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav sidebarItems={sidebarItems} roleColor={roleColor} />
     </div>
   );
 }
