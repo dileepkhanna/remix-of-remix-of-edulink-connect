@@ -3,17 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ChevronLeft, ChevronRight, CheckCircle2, XCircle, Clock, Download, FileSpreadsheet, FileText } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle2, XCircle, Clock, FileSpreadsheet, FileText } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameMonth, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { downloadAttendanceCSV, downloadAttendancePDF } from '@/utils/attendanceDownload';
 import { toast } from 'sonner';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
 interface AttendanceRecord {
   id: string;
@@ -139,19 +133,12 @@ export default function AttendanceCalendar({ attendance, childName, className = 
               <Badge variant="outline" className="gap-1 text-xs whitespace-nowrap">
                 <span className="font-bold text-primary">{monthPct}%</span> attendance
               </Badge>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="h-8 w-8"><Download className="h-4 w-4" /></Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleDownloadCSV}>
-                    <FileSpreadsheet className="h-4 w-4 mr-2" /> CSV
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleDownloadPDF}>
-                    <FileText className="h-4 w-4 mr-2" /> PDF
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleDownloadCSV} title="Download CSV">
+                <FileSpreadsheet className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleDownloadPDF} title="Download PDF">
+                <FileText className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </CardHeader>

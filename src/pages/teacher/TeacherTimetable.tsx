@@ -7,13 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Loader2, Calendar, Clock, User, Download, FileText, Table } from 'lucide-react';
+import { Loader2, Calendar, Clock, User, FileText, Table } from 'lucide-react';
 import {
   Users,
   GraduationCap,
@@ -229,24 +223,16 @@ export default function TeacherTimetable() {
           <TabsContent value="my-schedule" className="mt-6">
             <div className="flex justify-end mb-4">
               {mySchedule.length > 0 && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
-                      <Download className="h-4 w-4 mr-2" />
-                      Download My Schedule
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={handleDownloadMyScheduleCSV}>
-                      <Table className="h-4 w-4 mr-2" />
-                      Download as CSV
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDownloadMySchedulePDF}>
-                      <FileText className="h-4 w-4 mr-2" />
-                      Print / Save as PDF
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={handleDownloadMyScheduleCSV}>
+                    <Table className="h-4 w-4 mr-2" />
+                    CSV
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleDownloadMySchedulePDF}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    PDF
+                  </Button>
+                </div>
               )}
             </div>
 
@@ -325,24 +311,16 @@ export default function TeacherTimetable() {
               </div>
 
               {timetable.length > 0 && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
-                      <Download className="h-4 w-4 mr-2" />
-                      Download
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={handleDownloadClassCSV}>
-                      <Table className="h-4 w-4 mr-2" />
-                      Download as CSV
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDownloadClassPDF}>
-                      <FileText className="h-4 w-4 mr-2" />
-                      Print / Save as PDF
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={handleDownloadClassCSV}>
+                    <Table className="h-4 w-4 mr-2" />
+                    CSV
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleDownloadClassPDF}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    PDF
+                  </Button>
+                </div>
               )}
             </div>
 
