@@ -102,9 +102,11 @@ export default function ParentTimetable() {
     fetchTimetable();
   }, [user]);
 
-  if (loading || loadingData) {
+  if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
+
+  const isLoadingContent = loadingData;
 
   const groupedByDay = DAYS.reduce((acc, day) => {
     acc[day] = timetable.filter(t => t.day_of_week === day).sort((a, b) => a.period_number - b.period_number);
@@ -121,6 +123,9 @@ export default function ParentTimetable() {
 
   return (
     <DashboardLayout sidebarItems={parentSidebarItems} roleColor="parent">
+      {isLoadingContent ? (
+        <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+      ) : (
       <div className="space-y-6 animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -189,6 +194,7 @@ export default function ParentTimetable() {
           </div>
         )}
       </div>
+      )}
     </DashboardLayout>
   );
 }
