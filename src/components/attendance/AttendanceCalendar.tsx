@@ -133,9 +133,6 @@ export default function AttendanceCalendar({ attendance, childName, className = 
               <Badge variant="outline" className="gap-1 text-xs whitespace-nowrap">
                 <span className="font-bold text-primary">{monthPct}%</span> attendance
               </Badge>
-              <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0" onClick={handleDownloadCSV} title="Download CSV">
-                <FileSpreadsheet className="h-4 w-4" />
-              </Button>
               <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0" onClick={handleDownloadPDF} title="Download PDF">
                 <FileText className="h-4 w-4" />
               </Button>
