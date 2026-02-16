@@ -15,7 +15,11 @@ export default function ParentGallery() {
     if (!loading && (!user || userRole !== 'parent')) navigate('/auth');
   }, [user, userRole, loading, navigate]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (loading) return (
+    <DashboardLayout sidebarItems={parentSidebarItems} roleColor="parent">
+      <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+    </DashboardLayout>
+  );
 
   return (
     <DashboardLayout sidebarItems={parentSidebarItems} roleColor="parent">

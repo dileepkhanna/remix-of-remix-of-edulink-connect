@@ -67,9 +67,11 @@ export default function ParentHomework() {
     fetchHomework();
   }, [user]);
 
-  if (loading || loadingData) {
+  if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
+
+  const isLoadingContent = loadingData;
 
   const today = new Date().toISOString().split('T')[0];
   const pending = homework.filter(h => h.due_date >= today);
@@ -77,6 +79,9 @@ export default function ParentHomework() {
 
   return (
     <DashboardLayout sidebarItems={parentSidebarItems} roleColor="parent">
+      {isLoadingContent ? (
+        <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+      ) : (
       <div className="space-y-6 animate-fade-in">
         <BackButton to="/parent" />
         <div>
@@ -167,6 +172,7 @@ export default function ParentHomework() {
           </>
         )}
       </div>
+      )}
     </DashboardLayout>
   );
 }

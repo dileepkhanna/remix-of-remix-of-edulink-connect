@@ -70,9 +70,11 @@ export default function ParentFees() {
     fetchFees();
   }, [user]);
 
-  if (loading || loadingData) {
+  if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
+
+  const isLoadingContent = loadingData;
 
   const totalDue = fees.filter(f => f.payment_status !== 'paid').reduce((sum, f) => sum + (f.amount - (f.paid_amount || 0)), 0);
   const totalPaid = fees.filter(f => f.payment_status === 'paid').reduce((sum, f) => sum + f.amount, 0);
@@ -87,6 +89,9 @@ export default function ParentFees() {
 
   return (
     <DashboardLayout sidebarItems={parentSidebarItems} roleColor="parent">
+      {isLoadingContent ? (
+        <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+      ) : (
       <div className="space-y-6 animate-fade-in">
         <BackButton to="/parent" />
         <div>
@@ -212,6 +217,7 @@ export default function ParentFees() {
           </Card>
         )}
       </div>
+      )}
     </DashboardLayout>
   );
 }

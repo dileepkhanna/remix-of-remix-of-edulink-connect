@@ -101,16 +101,17 @@ export default function ParentDashboard() {
     fetchData();
   }, [user]);
 
-  if (loading || loadingData) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
+
+  const isLoadingContent = loadingData;
 
   return (
     <DashboardLayout sidebarItems={parentSidebarItems} roleColor="parent">
+      {isLoadingContent ? (
+        <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+      ) : (
       <div className="space-y-6 animate-fade-in">
         {/* Welcome Section */}
         <div className="gradient-parent rounded-2xl p-6 text-white">
@@ -224,6 +225,7 @@ export default function ParentDashboard() {
           </CardContent>
         </Card>
       </div>
+      )}
     </DashboardLayout>
   );
 }
