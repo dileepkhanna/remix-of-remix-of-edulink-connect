@@ -147,14 +147,15 @@ export function downloadTimetableAsPDF(
   html += `
         </tbody>
       </table>
-      <script>window.onload = function() { window.print(); }</script>
     </body>
     </html>
   `;
 
-  const printWindow = window.open('', '_blank');
-  if (printWindow) {
-    printWindow.document.write(html);
-    printWindow.document.close();
-  }
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `${title.replace(/\s+/g, '_')}_Timetable.html`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }

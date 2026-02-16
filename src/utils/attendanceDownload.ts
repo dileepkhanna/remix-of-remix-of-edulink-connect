@@ -157,13 +157,13 @@ export function downloadAttendancePDF(
     </html>
   `;
 
-  // Open print window
-  const printWindow = window.open('', '_blank');
-  if (printWindow) {
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    printWindow.print();
-  }
+  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `${title.replace(/\s+/g, '_')}-${format(new Date(), 'yyyy-MM-dd')}.html`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 
   return true;
 }

@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,7 @@ interface Props {
 }
 
 export default function StudentProgressView({ marks, studentName, showAnalytics = true }: Props) {
-  const printRef = useRef<HTMLDivElement>(null);
+  
   const analytics = useMemo(() => {
     const validMarks = marks.filter(m => m.marks_obtained !== null && m.exams?.max_marks);
     
@@ -94,10 +94,7 @@ export default function StudentProgressView({ marks, studentName, showAnalytics 
   }, {} as Record<string, ExamMark[]>);
 
   const handleDownloadPDF = () => {
-    if (!printRef.current) return;
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) { toast.error('Please allow popups to download PDF'); return; }
-    printWindow.document.write(`
+    const html = `
       <html><head><title>${studentName} - Exam Results</title>
       <style>
         body { font-family: 'Inter', Arial, sans-serif; padding: 20px; color: #333; }
@@ -110,7 +107,6 @@ export default function StudentProgressView({ marks, studentName, showAnalytics 
         .summary-item { background: #f8f8f8; padding: 12px; border-radius: 8px; text-align: center; flex: 1; }
         .summary-item .value { font-size: 22px; font-weight: 700; }
         .summary-item .label { font-size: 11px; color: #888; }
-        @media print { body { padding: 0; } }
       </style></head><body>
       <h1>${studentName} - Exam Results Report</h1>
       <p style="color:#888;font-size:12px;">Generated on ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
@@ -130,14 +126,19 @@ export default function StudentProgressView({ marks, studentName, showAnalytics 
         </table>
       `).join('')}
       </body></html>
-    `);
-    printWindow.document.close();
-    setTimeout(() => { printWindow.print(); }, 300);
-    toast.success('PDF download initiated');
+    `;
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${studentName.replace(/\s+/g, '_')}_Exam_Results.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Report downloaded');
   };
 
   return (
-    <div className="space-y-6" ref={printRef}>
+    <div className="space-y-6">
       {/* Download Button */}
       {marks.length > 0 && (
         <div className="flex justify-end">
