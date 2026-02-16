@@ -123,20 +123,20 @@ export default function AttendanceCalendar({ attendance, childName, className = 
     <>
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-1 min-w-0">
               <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={goToPrev}><ChevronLeft className="h-4 w-4" /></Button>
               <CardTitle className="text-base sm:text-lg font-display whitespace-nowrap">{format(currentMonth, 'MMMM yyyy')}</CardTitle>
               <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={goToNext}><ChevronRight className="h-4 w-4" /></Button>
             </div>
-            <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div className="flex items-center gap-1.5">
               <Badge variant="outline" className="gap-1 text-xs whitespace-nowrap">
                 <span className="font-bold text-primary">{monthPct}%</span> attendance
               </Badge>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleDownloadCSV} title="Download CSV">
+              <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0" onClick={handleDownloadCSV} title="Download CSV">
                 <FileSpreadsheet className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleDownloadPDF} title="Download PDF">
+              <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0" onClick={handleDownloadPDF} title="Download PDF">
                 <FileText className="h-4 w-4" />
               </Button>
             </div>
