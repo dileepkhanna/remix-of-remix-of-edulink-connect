@@ -22,16 +22,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Calendar, Clock, Eye, EyeOff, Trash2, Plus, Settings, Coffee, User, Download, FileText, Table } from 'lucide-react';
+import { Loader2, Calendar, Clock, Eye, EyeOff, Trash2, Plus, Settings, Coffee, User, FileText, Table } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
@@ -688,24 +682,16 @@ export default function TimetableManagement() {
               </div>
 
               {teacherSchedule.length > 0 && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
-                      <Download className="h-4 w-4 mr-2" />
-                      Download Schedule
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={handleDownloadTeacherCSV}>
-                      <Table className="h-4 w-4 mr-2" />
-                      Download as CSV
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDownloadTeacherPDF}>
-                      <FileText className="h-4 w-4 mr-2" />
-                      Print / Save as PDF
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={handleDownloadTeacherCSV}>
+                    <Table className="h-4 w-4 mr-2" />
+                    CSV
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleDownloadTeacherPDF}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    PDF
+                  </Button>
+                </div>
               )}
             </div>
 

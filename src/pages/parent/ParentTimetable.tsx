@@ -5,13 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Loader2, Calendar, Clock, Download, FileText, Table } from 'lucide-react';
+import { Loader2, Calendar, Clock, FileText, Table } from 'lucide-react';
 import { parentSidebarItems } from '@/config/parentSidebar';
 import { downloadTimetableAsCSV, downloadTimetableAsPDF } from '@/utils/timetableDownload';
 
@@ -135,24 +129,16 @@ export default function ParentTimetable() {
           </div>
           
           {timetable.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={handleDownloadCSV}>
-                  <Table className="h-4 w-4 mr-2" />
-                  Download as CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDownloadPDF}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Print / Save as PDF
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleDownloadCSV}>
+                <Table className="h-4 w-4 mr-2" />
+                CSV
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
+                <FileText className="h-4 w-4 mr-2" />
+                PDF
+              </Button>
+            </div>
           )}
         </div>
 
