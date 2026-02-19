@@ -272,6 +272,7 @@ export type Database = {
           class_id: string | null
           created_at: string | null
           exam_date: string | null
+          exam_time: string | null
           id: string
           max_marks: number | null
           name: string
@@ -281,6 +282,7 @@ export type Database = {
           class_id?: string | null
           created_at?: string | null
           exam_date?: string | null
+          exam_time?: string | null
           id?: string
           max_marks?: number | null
           name: string
@@ -290,6 +292,7 @@ export type Database = {
           class_id?: string | null
           created_at?: string | null
           exam_date?: string | null
+          exam_time?: string | null
           id?: string
           max_marks?: number | null
           name?: string

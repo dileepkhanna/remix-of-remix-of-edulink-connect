@@ -90,6 +90,7 @@ export default function ExamCreationWizard({ open, onOpenChange, classes, subjec
         return {
           name: `${formData.name} (${formData.term})`,
           exam_date: entry.date,
+          exam_time: slot ? `${slot.startTime} - ${slot.endTime}` : null,
           max_marks: parseInt(formData.maxMarks) || 100,
           class_id: entry.classId,
           subject_id: entry.subjectId,

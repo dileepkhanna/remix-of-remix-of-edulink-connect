@@ -3,13 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, FileText, Loader2 } from 'lucide-react';
+import { Calendar, Clock, FileText, Loader2 } from 'lucide-react';
 
 interface Exam {
   id: string;
   name: string;
   max_marks: number | null;
   exam_date: string | null;
+  exam_time: string | null;
   class_id: string | null;
   subject_id: string | null;
   classes?: { name: string; section: string } | null;
@@ -127,15 +128,23 @@ export default function ExamScheduleView({ filterClassIds }: ExamScheduleViewPro
                   <Badge variant="secondary" className="text-xs capitalize">
                     {exam.subjects?.name || 'All Subjects'}
                   </Badge>
-                  {exam.exam_date && (
-                    <span className="flex items-center gap-1 text-xs text-muted-foreground ml-auto">
-                      <Calendar className="h-3 w-3" />
-                      {new Date(exam.exam_date).toLocaleDateString()}
+                  <div className="flex items-center gap-3 ml-auto">
+                    {exam.exam_date && (
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        {new Date(exam.exam_date).toLocaleDateString()}
+                      </span>
+                    )}
+                    {exam.exam_time && (
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        {exam.exam_time}
+                      </span>
+                    )}
+                    <span className="text-xs text-muted-foreground">
+                      Max: {exam.max_marks}
                     </span>
-                  )}
-                  <span className="text-xs text-muted-foreground">
-                    Max: {exam.max_marks}
-                  </span>
+                  </div>
                 </div>
               ))}
             </div>
