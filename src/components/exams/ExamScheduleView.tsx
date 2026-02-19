@@ -121,29 +121,31 @@ export default function ExamScheduleView({ filterClassIds }: ExamScheduleViewPro
           <CardContent className="p-0">
             <div className="divide-y">
               {examList.map(exam => (
-                <div key={exam.id} className="flex flex-wrap items-center gap-2 px-4 py-3">
-                  <Badge variant="outline" className="text-xs">
-                    {exam.classes ? `${exam.classes.name}-${exam.classes.section.toUpperCase()}` : 'All'}
-                  </Badge>
-                  <Badge variant="secondary" className="text-xs capitalize">
-                    {exam.subjects?.name || 'All Subjects'}
-                  </Badge>
-                  <div className="flex items-center gap-3 ml-auto">
+                <div key={exam.id} className="px-4 py-3 space-y-1.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline" className="text-xs">
+                      {exam.classes ? `${exam.classes.name}-${exam.classes.section.toUpperCase()}` : 'All'}
+                    </Badge>
+                    <Badge variant="secondary" className="text-xs capitalize">
+                      {exam.subjects?.name || 'All Subjects'}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs ml-auto">
+                      Max: {exam.max_marks}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-3 flex-wrap text-xs text-muted-foreground">
                     {exam.exam_date && (
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         {new Date(exam.exam_date).toLocaleDateString()}
                       </span>
                     )}
                     {exam.exam_time && (
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {exam.exam_time}
                       </span>
                     )}
-                    <span className="text-xs text-muted-foreground">
-                      Max: {exam.max_marks}
-                    </span>
                   </div>
                 </div>
               ))}
