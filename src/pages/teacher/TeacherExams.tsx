@@ -21,6 +21,7 @@ import {
   ClipboardList,
 } from 'lucide-react';
 import ExamMarksEntry from '@/components/exams/ExamMarksEntry';
+import ExamScheduleView from '@/components/exams/ExamScheduleView';
 import ExamResultsView from '@/components/exams/ExamResultsView';
 import StudentProgressView from '@/components/exams/StudentProgressView';
 import { BackButton } from '@/components/ui/back-button';
@@ -187,7 +188,11 @@ export default function TeacherExams() {
           </Card>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="schedule" className="flex items-center gap-1 text-xs sm:text-sm">
+                <Calendar className="h-3.5 w-3.5" />
+                <span>Schedule</span>
+              </TabsTrigger>
               <TabsTrigger value="enter" className="flex items-center gap-1 text-xs sm:text-sm">
                 <ClipboardList className="h-3.5 w-3.5" />
                 <span>Enter Marks</span>
@@ -201,6 +206,10 @@ export default function TeacherExams() {
                 <span>Student</span>
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="schedule" className="mt-4">
+              <ExamScheduleView />
+            </TabsContent>
 
             <TabsContent value="enter" className="mt-4">
               <ExamMarksEntry exams={exams} onMarksUpdated={fetchData} />
