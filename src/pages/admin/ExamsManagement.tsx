@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Plus, Search, Loader2, MoreHorizontal, Trash2, Calendar, FileText, ClipboardList, BarChart3 } from 'lucide-react';
+import { Plus, Search, Loader2, MoreHorizontal, Trash2, Calendar, FileText, ClipboardList, BarChart3, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import ExamCreationWizard from '@/components/exams/ExamCreationWizard';
 import ExamMarksEntry from '@/components/exams/ExamMarksEntry';
@@ -198,6 +198,12 @@ export default function ExamsManagement() {
                                     {new Date(exam.exam_date).toLocaleDateString()}
                                   </span>
                                 )}
+                                {exam.exam_time && (
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    {exam.exam_time}
+                                  </span>
+                                )}
                                 <span>Max: {exam.max_marks}</span>
                               </div>
                             </div>
@@ -222,6 +228,7 @@ export default function ExamsManagement() {
                             <TableHead>Class</TableHead>
                             <TableHead>Subject</TableHead>
                             <TableHead>Date</TableHead>
+                            <TableHead>Time</TableHead>
                             <TableHead>Max Marks</TableHead>
                             <TableHead className="w-[50px]"></TableHead>
                           </TableRow>
@@ -240,6 +247,14 @@ export default function ExamsManagement() {
                                   <div className="flex items-center gap-2 text-sm">
                                     <Calendar className="h-3 w-3 text-muted-foreground" />
                                     {new Date(exam.exam_date).toLocaleDateString()}
+                                  </div>
+                                ) : '-'}
+                              </TableCell>
+                              <TableCell>
+                                {exam.exam_time ? (
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <Clock className="h-3 w-3 text-muted-foreground" />
+                                    {exam.exam_time}
                                   </div>
                                 ) : '-'}
                               </TableCell>

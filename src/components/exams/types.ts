@@ -2,6 +2,7 @@ export interface Exam {
   id: string;
   name: string;
   exam_date: string | null;
+  exam_time: string | null;
   max_marks: number | null;
   class_id: string | null;
   subject_id: string | null;
