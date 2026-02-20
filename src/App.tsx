@@ -26,6 +26,7 @@ import AdminMessages from "./pages/admin/AdminMessages";
 import SettingsPage from "./pages/admin/SettingsPage";
 import LeadsManagement from "./pages/admin/LeadsManagement";
 import GalleryManagement from "./pages/admin/GalleryManagement";
+import SyllabusManagement from "./pages/admin/SyllabusManagement";
 
 // Teacher Pages
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
@@ -78,6 +79,7 @@ const App = () => (
             <Route path="/admin/timetable" element={<TimetableManagement />} />
             <Route path="/admin/attendance" element={<AttendanceManagement />} />
             <Route path="/admin/exams" element={<ExamsManagement />} />
+            <Route path="/admin/syllabus" element={<SyllabusManagement />} />
             <Route path="/admin/announcements" element={<AnnouncementsManagement />} />
             <Route path="/admin/leave" element={<LeaveManagement />} />
             <Route path="/admin/complaints" element={<ComplaintsManagement />} />
