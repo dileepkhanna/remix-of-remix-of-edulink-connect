@@ -30,6 +30,8 @@ interface SyllabusItem {
   week_number: number | null;
   schedule_date: string | null;
   schedule_time: string | null;
+  start_date: string | null;
+  end_date: string | null;
   classes?: { name: string; section: string } | null;
   subjects?: { name: string } | null;
 }
@@ -69,7 +71,7 @@ export default function SyllabusManagement() {
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     class_id: '', subject_id: '', exam_type: '', chapter_name: '', topic_name: '',
-    week_number: '', schedule_date: '', schedule_time: '',
+    week_number: '', schedule_date: '', schedule_time: '', start_date: '', end_date: '',
   });
   // Teacher assignments during creation
   const [pendingTeachers, setPendingTeachers] = useState<{ teacher_id: string; role_type: string }[]>([]);
@@ -123,7 +125,7 @@ export default function SyllabusManagement() {
   }
 
   const resetForm = useCallback(() => {
-    setFormData({ class_id: '', subject_id: '', exam_type: '', chapter_name: '', topic_name: '', week_number: '', schedule_date: '', schedule_time: '' });
+    setFormData({ class_id: '', subject_id: '', exam_type: '', chapter_name: '', topic_name: '', week_number: '', schedule_date: '', schedule_time: '', start_date: '', end_date: '' });
     setPendingTeachers([]);
     setBulkTopics('');
     setBulkMode(false);
@@ -169,6 +171,8 @@ export default function SyllabusManagement() {
         week_number: formData.week_number ? parseInt(formData.week_number) + idx : null,
         schedule_date: formData.schedule_date || null,
         schedule_time: formData.schedule_time || null,
+        start_date: formData.start_date || null,
+        end_date: formData.end_date || null,
         created_by: user?.id,
       }));
 
@@ -197,6 +201,8 @@ export default function SyllabusManagement() {
         week_number: formData.week_number ? parseInt(formData.week_number) : null,
         schedule_date: formData.schedule_date || null,
         schedule_time: formData.schedule_time || null,
+        start_date: formData.start_date || null,
+        end_date: formData.end_date || null,
         created_by: user?.id,
       }).select('id').single();
 
@@ -232,6 +238,7 @@ export default function SyllabusManagement() {
       chapter_name: formData.chapter_name, topic_name: formData.topic_name,
       week_number: formData.week_number ? parseInt(formData.week_number) : null,
       schedule_date: formData.schedule_date || null, schedule_time: formData.schedule_time || null,
+      start_date: formData.start_date || null, end_date: formData.end_date || null,
     }).eq('id', selectedSyllabus.id);
     if (error) { toast.error(error.message); return; }
     toast.success('Syllabus updated');
@@ -251,7 +258,7 @@ export default function SyllabusManagement() {
       class_id: item.class_id, subject_id: item.subject_id, exam_type: item.exam_type || '',
       chapter_name: item.chapter_name, topic_name: item.topic_name,
       week_number: item.week_number?.toString() || '', schedule_date: item.schedule_date || '',
-      schedule_time: item.schedule_time || '',
+      schedule_time: item.schedule_time || '', start_date: item.start_date || '', end_date: item.end_date || '',
     });
     setEditDialogOpen(true);
   }
@@ -387,6 +394,14 @@ export default function SyllabusManagement() {
                           </Select>
                         </div>
                       )}
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Start Date</Label>
+                        <Input type="date" value={formData.start_date} onChange={e => setFormData(f => ({ ...f, start_date: e.target.value }))} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">End Date</Label>
+                        <Input type="date" value={formData.end_date} onChange={e => setFormData(f => ({ ...f, end_date: e.target.value }))} min={formData.start_date} />
+                      </div>
                       {activeTab === 'competitive' && (
                         <div className="space-y-1.5">
                           <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exam Type</Label>
@@ -617,6 +632,16 @@ export default function SyllabusManagement() {
                     <Input value={formData.topic_name} onChange={e => setFormData(f => ({ ...f, topic_name: e.target.value }))} />
                   </div>
                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Start Date</Label>
+                    <Input type="date" value={formData.start_date} onChange={e => setFormData(f => ({ ...f, start_date: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>End Date</Label>
+                    <Input type="date" value={formData.end_date} onChange={e => setFormData(f => ({ ...f, end_date: e.target.value }))} min={formData.start_date} />
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label>Week</Label>
@@ -762,6 +787,17 @@ function SyllabusList({
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-sm">{topic.topic_name}</p>
                               <div className="flex flex-wrap items-center gap-2 mt-1">
+                                {topic.start_date && topic.end_date && (
+                                  <Badge variant="outline" className="text-[10px]">
+                                    <Calendar className="h-3 w-3 mr-0.5" />
+                                    {new Date(topic.start_date).toLocaleDateString()} - {new Date(topic.end_date).toLocaleDateString()}
+                                  </Badge>
+                                )}
+                                {topic.start_date && !topic.end_date && (
+                                  <Badge variant="outline" className="text-[10px]">
+                                    <Calendar className="h-3 w-3 mr-0.5" />From {new Date(topic.start_date).toLocaleDateString()}
+                                  </Badge>
+                                )}
                                 {topic.week_number && <Badge variant="outline" className="text-[10px]">Week {topic.week_number}</Badge>}
                                 {topic.schedule_date && (
                                   <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
