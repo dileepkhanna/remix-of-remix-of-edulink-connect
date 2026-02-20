@@ -39,7 +39,11 @@ interface SubjectOption { id: string; name: string; category: string; exam_type:
 interface TeacherOption { id: string; user_id: string; fullName?: string; }
 interface TeacherMapping { id: string; teacher_id: string; syllabus_id: string; role_type: string; teacherName?: string; }
 
-const EXAM_TYPES = ['JEE', 'NEET', 'BITSAT'];
+const COMPETITIVE_EXAM_TYPES = ['JEE', 'NEET', 'BITSAT'];
+const GENERAL_EXAM_TYPES = [
+  'Unit Test 1', 'Unit Test 2', 'Quarterly Exam', 'Mid-Term Exam',
+  'Half Yearly Exam', 'Pre-Final Exam', 'Annual Exam',
+];
 const ROLE_TYPES = [
   { value: 'lead', label: 'Lead Faculty' },
   { value: 'practice', label: 'Practice Faculty' },
@@ -159,7 +163,7 @@ export default function SyllabusManagement() {
         class_id: formData.class_id,
         subject_id: formData.subject_id,
         syllabus_type: syllabusType,
-        exam_type: syllabusType === 'competitive' ? formData.exam_type || null : null,
+        exam_type: formData.exam_type || null,
         chapter_name: formData.chapter_name,
         topic_name: topic,
         week_number: formData.week_number ? parseInt(formData.week_number) + idx : null,
@@ -187,7 +191,7 @@ export default function SyllabusManagement() {
         class_id: formData.class_id,
         subject_id: formData.subject_id,
         syllabus_type: syllabusType,
-        exam_type: syllabusType === 'competitive' ? formData.exam_type || null : null,
+        exam_type: formData.exam_type || null,
         chapter_name: formData.chapter_name,
         topic_name: formData.topic_name,
         week_number: formData.week_number ? parseInt(formData.week_number) : null,
@@ -224,7 +228,7 @@ export default function SyllabusManagement() {
     const { error } = await supabase.from('syllabus').update({
       class_id: formData.class_id, subject_id: formData.subject_id,
       syllabus_type: syllabusType,
-      exam_type: syllabusType === 'competitive' ? formData.exam_type || null : null,
+      exam_type: formData.exam_type || null,
       chapter_name: formData.chapter_name, topic_name: formData.topic_name,
       week_number: formData.week_number ? parseInt(formData.week_number) : null,
       schedule_date: formData.schedule_date || null, schedule_time: formData.schedule_time || null,
@@ -296,7 +300,7 @@ export default function SyllabusManagement() {
   const groupedSyllabus = useMemo(() => {
     const groups: Record<string, SyllabusItem[]> = {};
     filteredSyllabus.forEach(s => {
-      const key = `${s.classes?.name || ''}-${s.classes?.section || ''} | ${s.subjects?.name || ''} | ${s.chapter_name}`;
+      const key = `${s.classes?.name || ''}-${s.classes?.section || ''} | ${s.subjects?.name || ''} | ${s.exam_type || 'Unassigned'} | ${s.chapter_name}`;
       if (!groups[key]) groups[key] = [];
       groups[key].push(s);
     });
@@ -372,13 +376,24 @@ export default function SyllabusManagement() {
                           </SelectContent>
                         </Select>
                       </div>
+                     {activeTab === 'general' && (
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exam *</Label>
+                          <Select value={formData.exam_type} onValueChange={v => setFormData(f => ({ ...f, exam_type: v }))}>
+                            <SelectTrigger><SelectValue placeholder="Select exam" /></SelectTrigger>
+                            <SelectContent>
+                              {GENERAL_EXAM_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                       {activeTab === 'competitive' && (
                         <div className="space-y-1.5">
                           <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exam Type</Label>
                           <Select value={formData.exam_type} onValueChange={v => setFormData(f => ({ ...f, exam_type: v }))}>
                             <SelectTrigger><SelectValue placeholder="Select exam" /></SelectTrigger>
                             <SelectContent>
-                              {EXAM_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                              {COMPETITIVE_EXAM_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </div>
@@ -430,10 +445,12 @@ export default function SyllabusManagement() {
                       </CollapsibleTrigger>
                       <CollapsibleContent className="mt-2">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          <div className="space-y-1.5">
-                            <Label className="text-xs text-muted-foreground">Week Number</Label>
-                            <Input type="number" value={formData.week_number} onChange={e => setFormData(f => ({ ...f, week_number: e.target.value }))} placeholder="1" />
-                          </div>
+                          {activeTab !== 'general' && (
+                            <div className="space-y-1.5">
+                              <Label className="text-xs text-muted-foreground">Week Number</Label>
+                              <Input type="number" value={formData.week_number} onChange={e => setFormData(f => ({ ...f, week_number: e.target.value }))} placeholder="1" />
+                            </div>
+                          )}
                           <div className="space-y-1.5">
                             <Label className="text-xs text-muted-foreground">Schedule Date</Label>
                             <Input type="date" value={formData.schedule_date} onChange={e => setFormData(f => ({ ...f, schedule_date: e.target.value }))} />
@@ -538,7 +555,7 @@ export default function SyllabusManagement() {
             </div>
 
             <TabsContent value="general" className="mt-4">
-              <SyllabusList groupedSyllabus={groupedSyllabus} teacherMappings={teacherMappings} onEdit={openEdit} onDelete={handleDelete} onAssignTeacher={openTeacherMapping} />
+              <SyllabusList groupedSyllabus={groupedSyllabus} teacherMappings={teacherMappings} onEdit={openEdit} onDelete={handleDelete} onAssignTeacher={openTeacherMapping} showExamType />
             </TabsContent>
             <TabsContent value="competitive" className="mt-4">
               <SyllabusList groupedSyllabus={groupedSyllabus} teacherMappings={teacherMappings} onEdit={openEdit} onDelete={handleDelete} onAssignTeacher={openTeacherMapping} showExamType />
@@ -572,12 +589,21 @@ export default function SyllabusManagement() {
                     </Select>
                   </div>
                 </div>
+                {activeTab === 'general' && (
+                  <div className="space-y-2">
+                    <Label>Exam *</Label>
+                    <Select value={formData.exam_type} onValueChange={v => setFormData(f => ({ ...f, exam_type: v }))}>
+                      <SelectTrigger><SelectValue placeholder="Select exam" /></SelectTrigger>
+                      <SelectContent>{GENERAL_EXAM_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
                 {activeTab === 'competitive' && (
                   <div className="space-y-2">
                     <Label>Exam Type</Label>
                     <Select value={formData.exam_type} onValueChange={v => setFormData(f => ({ ...f, exam_type: v }))}>
                       <SelectTrigger><SelectValue placeholder="Select exam type" /></SelectTrigger>
-                      <SelectContent>{EXAM_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                      <SelectContent>{COMPETITIVE_EXAM_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                 )}
@@ -711,11 +737,11 @@ function SyllabusList({
             >
               <div className="flex items-center gap-2 text-left">
                 <BookOpen className="h-4 w-4 text-primary shrink-0" />
-                <span className="font-medium text-sm">{parts[2]}</span>
+                <span className="font-medium text-sm">{parts[3]}</span>
                 <div className="flex flex-wrap gap-1">
                   <Badge variant="outline" className="text-[10px]">{parts[0]}</Badge>
                   <Badge variant="secondary" className="text-[10px]">{parts[1]}</Badge>
-                  {showExamType && topics[0]?.exam_type && <Badge className="text-[10px]">{topics[0].exam_type}</Badge>}
+                  {showExamType && parts[2] && parts[2] !== 'Unassigned' && <Badge className="text-[10px]">{parts[2]}</Badge>}
                 </div>
                 <Badge variant="outline" className="text-[10px]">{topics.length} topics</Badge>
               </div>
