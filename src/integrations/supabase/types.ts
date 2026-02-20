@@ -1309,10 +1309,12 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           cycle_id: string | null
+          end_date: string | null
           exam_type: string | null
           id: string
           schedule_date: string | null
           schedule_time: string | null
+          start_date: string | null
           subject_id: string
           syllabus_type: string
           topic_name: string
@@ -1324,10 +1326,12 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           cycle_id?: string | null
+          end_date?: string | null
           exam_type?: string | null
           id?: string
           schedule_date?: string | null
           schedule_time?: string | null
+          start_date?: string | null
           subject_id: string
           syllabus_type?: string
           topic_name: string
@@ -1339,10 +1343,12 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           cycle_id?: string | null
+          end_date?: string | null
           exam_type?: string | null
           id?: string
           schedule_date?: string | null
           schedule_time?: string | null
+          start_date?: string | null
           subject_id?: string
           syllabus_type?: string
           topic_name?: string
