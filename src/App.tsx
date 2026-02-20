@@ -28,6 +28,7 @@ import LeadsManagement from "./pages/admin/LeadsManagement";
 import GalleryManagement from "./pages/admin/GalleryManagement";
 import SyllabusManagement from "./pages/admin/SyllabusManagement";
 import ExamCyclesManagement from "./pages/admin/ExamCyclesManagement";
+import WeeklyExamsManagement from "./pages/admin/WeeklyExamsManagement";
 
 // Teacher Pages
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
@@ -82,6 +83,7 @@ const App = () => (
             <Route path="/admin/exams" element={<ExamsManagement />} />
             <Route path="/admin/syllabus" element={<SyllabusManagement />} />
             <Route path="/admin/exam-cycles" element={<ExamCyclesManagement />} />
+            <Route path="/admin/weekly-exams" element={<WeeklyExamsManagement />} />
             <Route path="/admin/announcements" element={<AnnouncementsManagement />} />
             <Route path="/admin/leave" element={<LeaveManagement />} />
             <Route path="/admin/complaints" element={<ComplaintsManagement />} />
