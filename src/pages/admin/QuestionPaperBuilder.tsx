@@ -1,11 +1,11 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { adminSidebarItems } from '@/config/adminSidebar';
 import { BackButton } from '@/components/ui/back-button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,8 +13,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Plus, Search, FileText, Pencil, Trash2, ChevronLeft, CheckCircle2, HelpCircle, AlignLeft } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Loader2, Plus, Search, FileText, Pencil, Trash2, ChevronLeft, CheckCircle2, HelpCircle, AlignLeft, ChevronDown, ChevronUp, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface WeeklyExam {
@@ -26,11 +26,7 @@ interface WeeklyExam {
   classes?: { name: string; section: string } | null;
 }
 
-interface ClassOption {
-  id: string;
-  name: string;
-  section: string;
-}
+interface ClassOption { id: string; name: string; section: string; }
 
 interface QuestionPaper {
   id: string;
@@ -57,6 +53,18 @@ interface Question {
   marks: number;
 }
 
+const emptyQForm = {
+  question_type: 'mcq',
+  question_text: '',
+  option_a: '',
+  option_b: '',
+  option_c: '',
+  option_d: '',
+  correct_answer: '',
+  explanation: '',
+  marks: '1',
+};
+
 export default function QuestionPaperBuilder() {
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
@@ -67,29 +75,27 @@ export default function QuestionPaperBuilder() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  // Selected exam/paper for building questions
   const [selectedPaper, setSelectedPaper] = useState<QuestionPaper | null>(null);
   const [selectedExam, setSelectedExam] = useState<WeeklyExam | null>(null);
 
-  // Create paper dialog
   const [createPaperOpen, setCreatePaperOpen] = useState(false);
   const [paperForm, setPaperForm] = useState({ exam_id: '', class_id: '' });
 
-  // Question dialog
-  const [questionDialogOpen, setQuestionDialogOpen] = useState(false);
+  // Question form
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
-  const [qForm, setQForm] = useState({
-    question_type: 'mcq',
-    question_text: '',
-    option_a: '',
-    option_b: '',
-    option_c: '',
-    option_d: '',
-    correct_answer: '',
-    explanation: '',
-    marks: '1',
-  });
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [qForm, setQForm] = useState({ ...emptyQForm });
+
+  // Rapid entry mode — inline form always visible
+  const [rapidMode, setRapidMode] = useState(true);
+  const [rapidDefaults, setRapidDefaults] = useState({ question_type: 'mcq', marks: '1' });
+  const questionTextRef = useRef<HTMLTextAreaElement>(null);
+
+  // Collapsed question list for performance with 120+ questions
+  const [collapsedQuestions, setCollapsedQuestions] = useState(true);
+  const [showCount, setShowCount] = useState(20);
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'admin')) navigate('/auth');
@@ -112,14 +118,25 @@ export default function QuestionPaperBuilder() {
     setLoadingData(false);
   }
 
+  // Optimized: only refetch questions for current paper
+  async function fetchQuestionsOnly() {
+    if (!selectedPaper) return;
+    const { data } = await supabase.from('questions').select('*').eq('question_paper_id', selectedPaper.id).order('question_number');
+    if (data) {
+      setQuestions(prev => {
+        const otherPaperQs = prev.filter(q => q.question_paper_id !== selectedPaper.id);
+        return [...otherPaperQs, ...(data as Question[])];
+      });
+    }
+  }
+
   const getExamForPaper = (examId: string) => exams.find(e => e.id === examId);
   const getClassLabel = (classId: string) => {
     const c = classes.find(cl => cl.id === classId);
     return c ? `${c.name}-${c.section}` : '—';
   };
-  const getQuestionsForPaper = (paperId: string) => questions.filter(q => q.question_paper_id === paperId);
+  const getQuestionsForPaper = useCallback((paperId: string) => questions.filter(q => q.question_paper_id === paperId), [questions]);
 
-  // Filter papers by search
   const filteredPapers = useMemo(() => {
     if (!searchQuery) return papers;
     const q = searchQuery.toLowerCase();
@@ -129,13 +146,7 @@ export default function QuestionPaperBuilder() {
     });
   }, [papers, searchQuery, exams, classes]);
 
-  // Exams that don't have a paper yet for the selected class
-  const availableExams = useMemo(() => {
-    return exams.filter(e => {
-      // Check if paper already exists for this exam
-      return !papers.some(p => p.exam_id === e.id);
-    });
-  }, [exams, papers]);
+  const availableExams = useMemo(() => exams.filter(e => !papers.some(p => p.exam_id === e.id)), [exams, papers]);
 
   async function handleCreatePaper(e: React.FormEvent) {
     e.preventDefault();
@@ -145,11 +156,7 @@ export default function QuestionPaperBuilder() {
     if (!classId) { toast.error('Class is required'); return; }
 
     const { data, error } = await supabase.from('question_papers').insert({
-      exam_id: paperForm.exam_id,
-      class_id: classId,
-      total_questions: 0,
-      total_marks: 0,
-      uploaded_by: user?.id,
+      exam_id: paperForm.exam_id, class_id: classId, total_questions: 0, total_marks: 0, uploaded_by: user?.id,
     }).select().single();
 
     if (error) { toast.error(error.message); return; }
@@ -157,20 +164,17 @@ export default function QuestionPaperBuilder() {
     setCreatePaperOpen(false);
     setPaperForm({ exam_id: '', class_id: '' });
     await fetchData();
-    // Auto-open the new paper
-    if (data) {
-      setSelectedPaper(data as QuestionPaper);
-      setSelectedExam(exam || null);
-    }
+    if (data) { setSelectedPaper(data as QuestionPaper); setSelectedExam(exam || null); }
   }
 
   function openPaper(paper: QuestionPaper) {
     setSelectedPaper(paper);
     setSelectedExam(getExamForPaper(paper.exam_id) || null);
+    setShowCount(20);
+    setCollapsedQuestions(true);
   }
 
   async function handleDeletePaper(id: string) {
-    // Delete questions first
     await supabase.from('questions').delete().eq('question_paper_id', id);
     const { error } = await supabase.from('question_papers').delete().eq('id', id);
     if (error) { toast.error(error.message); return; }
@@ -179,34 +183,17 @@ export default function QuestionPaperBuilder() {
     fetchData();
   }
 
-  function resetQForm() {
-    setQForm({ question_type: 'mcq', question_text: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: '', explanation: '', marks: '1' });
+  function resetQForm(keepDefaults = true) {
+    setQForm({
+      ...emptyQForm,
+      question_type: keepDefaults ? rapidDefaults.question_type : 'mcq',
+      marks: keepDefaults ? rapidDefaults.marks : '1',
+    });
     setEditingQuestion(null);
   }
 
-  function openAddQuestion() {
-    resetQForm();
-    const paperQuestions = getQuestionsForPaper(selectedPaper!.id);
-    setQuestionDialogOpen(true);
-  }
-
-  function openEditQuestion(q: Question) {
-    setEditingQuestion(q);
-    setQForm({
-      question_type: q.question_type,
-      question_text: q.question_text,
-      option_a: q.option_a || '',
-      option_b: q.option_b || '',
-      option_c: q.option_c || '',
-      option_d: q.option_d || '',
-      correct_answer: q.correct_answer || '',
-      explanation: q.explanation || '',
-      marks: q.marks.toString(),
-    });
-    setQuestionDialogOpen(true);
-  }
-
-  async function handleSaveQuestion(e: React.FormEvent) {
+  // RAPID ADD: saves and immediately clears for next question
+  async function handleRapidAdd(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedPaper) return;
     if (!qForm.question_text.trim()) { toast.error('Question text is required'); return; }
@@ -214,70 +201,101 @@ export default function QuestionPaperBuilder() {
       toast.error('MCQ needs at least options A and B'); return;
     }
 
+    setSaving(true);
     const paperQuestions = getQuestionsForPaper(selectedPaper.id);
+    const nextNum = paperQuestions.length + 1;
 
-    if (editingQuestion) {
-      const { error } = await supabase.from('questions').update({
-        question_text: qForm.question_text,
-        question_type: qForm.question_type,
-        option_a: qForm.question_type === 'mcq' ? qForm.option_a : null,
-        option_b: qForm.question_type === 'mcq' ? qForm.option_b : null,
-        option_c: qForm.question_type === 'mcq' ? qForm.option_c : null,
-        option_d: qForm.question_type === 'mcq' ? qForm.option_d : null,
-        correct_answer: qForm.correct_answer || null,
-        explanation: qForm.explanation || null,
-        marks: parseInt(qForm.marks) || 1,
-      }).eq('id', editingQuestion.id);
-      if (error) { toast.error(error.message); return; }
-      toast.success('Question updated');
-    } else {
-      const nextNum = paperQuestions.length + 1;
-      const { error } = await supabase.from('questions').insert({
-        question_paper_id: selectedPaper.id,
-        question_number: nextNum,
-        question_text: qForm.question_text,
-        question_type: qForm.question_type,
-        option_a: qForm.question_type === 'mcq' ? qForm.option_a : null,
-        option_b: qForm.question_type === 'mcq' ? qForm.option_b : null,
-        option_c: qForm.question_type === 'mcq' ? qForm.option_c : null,
-        option_d: qForm.question_type === 'mcq' ? qForm.option_d : null,
-        correct_answer: qForm.correct_answer || null,
-        explanation: qForm.explanation || null,
-        marks: parseInt(qForm.marks) || 1,
-      });
-      if (error) { toast.error(error.message); return; }
-      toast.success('Question added');
-    }
+    const { error } = await supabase.from('questions').insert({
+      question_paper_id: selectedPaper.id,
+      question_number: nextNum,
+      question_text: qForm.question_text,
+      question_type: qForm.question_type,
+      option_a: qForm.question_type === 'mcq' ? qForm.option_a || null : null,
+      option_b: qForm.question_type === 'mcq' ? qForm.option_b || null : null,
+      option_c: qForm.question_type === 'mcq' ? qForm.option_c || null : null,
+      option_d: qForm.question_type === 'mcq' ? qForm.option_d || null : null,
+      correct_answer: qForm.correct_answer || null,
+      explanation: qForm.explanation || null,
+      marks: parseInt(qForm.marks) || 1,
+    });
 
-    // Update paper totals
+    if (error) { toast.error(error.message); setSaving(false); return; }
+
+    // Update totals
     await updatePaperTotals(selectedPaper.id);
-    setQuestionDialogOpen(false);
+    await fetchQuestionsOnly();
+    setSaving(false);
+
+    // Clear form but keep type & marks defaults
+    setRapidDefaults({ question_type: qForm.question_type, marks: qForm.marks });
+    resetQForm(true);
+
+    toast.success(`Q${nextNum} added`, { duration: 1500 });
+
+    // Auto-focus question text for next entry
+    setTimeout(() => questionTextRef.current?.focus(), 100);
+  }
+
+  function openEditQuestion(q: Question) {
+    setEditingQuestion(q);
+    setQForm({
+      question_type: q.question_type,
+      question_text: q.question_text,
+      option_a: q.option_a || '', option_b: q.option_b || '',
+      option_c: q.option_c || '', option_d: q.option_d || '',
+      correct_answer: q.correct_answer || '',
+      explanation: q.explanation || '',
+      marks: q.marks.toString(),
+    });
+    setEditDialogOpen(true);
+  }
+
+  async function handleEditSave(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingQuestion) return;
+    if (!qForm.question_text.trim()) { toast.error('Question text is required'); return; }
+
+    setSaving(true);
+    const { error } = await supabase.from('questions').update({
+      question_text: qForm.question_text,
+      question_type: qForm.question_type,
+      option_a: qForm.question_type === 'mcq' ? qForm.option_a || null : null,
+      option_b: qForm.question_type === 'mcq' ? qForm.option_b || null : null,
+      option_c: qForm.question_type === 'mcq' ? qForm.option_c || null : null,
+      option_d: qForm.question_type === 'mcq' ? qForm.option_d || null : null,
+      correct_answer: qForm.correct_answer || null,
+      explanation: qForm.explanation || null,
+      marks: parseInt(qForm.marks) || 1,
+    }).eq('id', editingQuestion.id);
+
+    if (error) { toast.error(error.message); setSaving(false); return; }
+    await updatePaperTotals(selectedPaper!.id);
+    await fetchQuestionsOnly();
+    setSaving(false);
+    setEditDialogOpen(false);
     resetQForm();
-    fetchData();
+    toast.success('Question updated');
   }
 
   async function handleDeleteQuestion(qId: string) {
     if (!selectedPaper) return;
-    const { error } = await supabase.from('questions').delete().eq('id', qId);
-    if (error) { toast.error(error.message); return; }
-    // Re-number remaining questions
+    await supabase.from('questions').delete().eq('id', qId);
     const remaining = getQuestionsForPaper(selectedPaper.id).filter(q => q.id !== qId).sort((a, b) => a.question_number - b.question_number);
     for (let i = 0; i < remaining.length; i++) {
       await supabase.from('questions').update({ question_number: i + 1 }).eq('id', remaining[i].id);
     }
     await updatePaperTotals(selectedPaper.id);
+    await fetchQuestionsOnly();
     toast.success('Question deleted');
-    fetchData();
   }
 
   async function updatePaperTotals(paperId: string) {
-    const qs = getQuestionsForPaper(paperId);
-    // Recalculate after current operation (fetch fresh)
     const { data } = await supabase.from('questions').select('marks').eq('question_paper_id', paperId);
     if (data) {
-      const totalQ = data.length;
-      const totalM = data.reduce((sum, q) => sum + (q.marks || 0), 0);
-      await supabase.from('question_papers').update({ total_questions: totalQ, total_marks: totalM }).eq('id', paperId);
+      await supabase.from('question_papers').update({
+        total_questions: data.length,
+        total_marks: data.reduce((sum, q) => sum + (q.marks || 0), 0),
+      }).eq('id', paperId);
     }
   }
 
@@ -285,165 +303,209 @@ export default function QuestionPaperBuilder() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
-  // Question builder view for a selected paper
+  // ============ QUESTION BUILDER VIEW ============
   if (selectedPaper && selectedExam) {
     const paperQuestions = getQuestionsForPaper(selectedPaper.id).sort((a, b) => a.question_number - b.question_number);
     const totalMarks = paperQuestions.reduce((s, q) => s + q.marks, 0);
     const mcqCount = paperQuestions.filter(q => q.question_type === 'mcq').length;
     const descCount = paperQuestions.filter(q => q.question_type === 'descriptive').length;
+    const visibleQuestions = collapsedQuestions ? paperQuestions.slice(-showCount) : paperQuestions;
+    const hiddenCount = collapsedQuestions ? Math.max(0, paperQuestions.length - showCount) : 0;
+
+    const QuestionForm = ({ onSubmit, submitLabel, showSaveNext = false }: { onSubmit: (e: React.FormEvent) => void; submitLabel: string; showSaveNext?: boolean }) => (
+      <form onSubmit={onSubmit} className="space-y-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Label className="text-xs whitespace-nowrap">Type</Label>
+            <Select value={qForm.question_type} onValueChange={v => setQForm(f => ({ ...f, question_type: v }))}>
+              <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="mcq">MCQ</SelectItem>
+                <SelectItem value="descriptive">Descriptive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-xs whitespace-nowrap">Marks</Label>
+            <Input type="number" value={qForm.marks} onChange={e => setQForm(f => ({ ...f, marks: e.target.value }))} min="1" className="h-8 w-16 text-xs" />
+          </div>
+          {showSaveNext && (
+            <Badge variant="secondary" className="text-xs ml-auto">
+              Next: Q{paperQuestions.length + 1}
+            </Badge>
+          )}
+        </div>
+
+        <Textarea
+          ref={showSaveNext ? questionTextRef : undefined}
+          value={qForm.question_text}
+          onChange={e => setQForm(f => ({ ...f, question_text: e.target.value }))}
+          rows={2}
+          placeholder="Enter question text... (press Ctrl+Enter to save)"
+          className="text-sm"
+          onKeyDown={e => {
+            if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); onSubmit(e); }
+          }}
+        />
+
+        {qForm.question_type === 'mcq' && (
+          <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {['A', 'B', 'C', 'D'].map(opt => (
+                <div key={opt} className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setQForm(f => ({ ...f, correct_answer: opt }))}
+                    className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shrink-0 border transition-colors ${
+                      qForm.correct_answer === opt
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'border-input hover:border-primary/50'
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                  <Input
+                    value={qForm[`option_${opt.toLowerCase()}` as keyof typeof qForm] as string}
+                    onChange={e => setQForm(f => ({ ...f, [`option_${opt.toLowerCase()}`]: e.target.value }))}
+                    placeholder={`Option ${opt}${opt <= 'B' ? ' *' : ''}`}
+                    className="h-8 text-xs"
+                  />
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">Click the letter circle to mark correct answer</p>
+          </div>
+        )}
+
+        {qForm.question_type === 'descriptive' && (
+          <Input
+            value={qForm.correct_answer}
+            onChange={e => setQForm(f => ({ ...f, correct_answer: e.target.value }))}
+            placeholder="Model answer (optional)"
+            className="h-8 text-xs"
+          />
+        )}
+
+        <div className="flex gap-2">
+          <Button type="submit" size="sm" className="flex-1" disabled={saving}>
+            {saving && <Loader2 className="h-3 w-3 animate-spin mr-1" />}
+            {submitLabel}
+          </Button>
+        </div>
+      </form>
+    );
 
     return (
       <DashboardLayout sidebarItems={adminSidebarItems} roleColor="admin">
-        <div className="space-y-6 animate-fade-in">
-          <Button variant="ghost" size="sm" onClick={() => { setSelectedPaper(null); setSelectedExam(null); }}>
+        <div className="space-y-4 animate-fade-in">
+          <Button variant="ghost" size="sm" onClick={() => { setSelectedPaper(null); setSelectedExam(null); fetchData(); }}>
             <ChevronLeft className="h-4 w-4 mr-1" />Back to Papers
           </Button>
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* Header with stats */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h1 className="font-display text-2xl font-bold">{selectedExam.exam_title}</h1>
-              <p className="text-muted-foreground text-sm">
-                {getClassLabel(selectedPaper.class_id)} · {paperQuestions.length} questions · {totalMarks} marks
-              </p>
-              <div className="flex gap-2 mt-2">
-                <Badge variant="secondary" className="text-xs">{mcqCount} MCQ</Badge>
-                <Badge variant="outline" className="text-xs">{descCount} Descriptive</Badge>
+              <h1 className="font-display text-xl font-bold">{selectedExam.exam_title}</h1>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <Badge variant="outline" className="text-xs">{getClassLabel(selectedPaper.class_id)}</Badge>
+                <Badge variant="secondary" className="text-xs">{paperQuestions.length} questions</Badge>
+                <Badge variant="secondary" className="text-xs">{totalMarks} marks</Badge>
+                <Badge variant="outline" className="text-xs">{mcqCount} MCQ</Badge>
+                <Badge variant="outline" className="text-xs">{descCount} Desc</Badge>
               </div>
             </div>
-            <Button onClick={openAddQuestion}>
-              <Plus className="h-4 w-4 mr-2" />Add Question
-            </Button>
+            <div className="flex items-center gap-2">
+              <Label className="text-xs">Rapid Mode</Label>
+              <Switch checked={rapidMode} onCheckedChange={setRapidMode} />
+              {rapidMode && <Zap className="h-4 w-4 text-primary" />}
+            </div>
           </div>
 
+          {/* Rapid entry form — always visible at top */}
+          {rapidMode && (
+            <Card className="border-primary/30 bg-primary/5">
+              <CardContent className="py-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Quick Add</span>
+                  <span className="text-xs text-muted-foreground">— Ctrl+Enter to save instantly</span>
+                </div>
+                <QuestionForm onSubmit={handleRapidAdd} submitLabel={`Save Q${paperQuestions.length + 1} & Next`} showSaveNext />
+              </CardContent>
+            </Card>
+          )}
+
+          {!rapidMode && (
+            <Button onClick={() => { resetQForm(true); setEditDialogOpen(false); setRapidMode(true); }}>
+              <Plus className="h-4 w-4 mr-2" />Add Question
+            </Button>
+          )}
+
+          {/* Question list */}
           {paperQuestions.length === 0 ? (
             <Card>
-              <CardContent className="py-12 text-center text-muted-foreground">
-                No questions yet. Click "Add Question" to start building the paper.
+              <CardContent className="py-8 text-center text-muted-foreground text-sm">
+                No questions yet. {rapidMode ? 'Use the quick add form above.' : 'Click "Add Question" to start.'}
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-3">
-              {paperQuestions.map(q => (
-                <Card key={q.id}>
-                  <CardContent className="py-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0 space-y-2">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-bold text-primary">Q{q.question_number}</span>
-                          <Badge variant={q.question_type === 'mcq' ? 'secondary' : 'outline'} className="text-xs">
-                            {q.question_type === 'mcq' ? <><HelpCircle className="h-3 w-3 mr-1" />MCQ</> : <><AlignLeft className="h-3 w-3 mr-1" />Descriptive</>}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">{q.marks} mark{q.marks > 1 ? 's' : ''}</Badge>
-                        </div>
-                        <p className="text-sm">{q.question_text}</p>
-                        {q.question_type === 'mcq' && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs">
-                            {['A', 'B', 'C', 'D'].map(opt => {
-                              const val = q[`option_${opt.toLowerCase()}` as keyof Question] as string | null;
-                              if (!val) return null;
-                              const isCorrect = q.correct_answer?.toUpperCase() === opt;
-                              return (
-                                <div key={opt} className={`flex items-center gap-1.5 p-1.5 rounded ${isCorrect ? 'bg-primary/10 text-primary font-medium' : 'text-muted-foreground'}`}>
-                                  {isCorrect && <CheckCircle2 className="h-3 w-3 shrink-0" />}
-                                  <span>{opt}. {val}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                        {q.correct_answer && q.question_type === 'descriptive' && (
-                          <p className="text-xs text-muted-foreground"><strong>Answer:</strong> {q.correct_answer}</p>
-                        )}
-                        {q.explanation && (
-                          <p className="text-xs text-muted-foreground italic">💡 {q.explanation}</p>
-                        )}
+            <div className="space-y-2">
+              {/* Show hidden count */}
+              {hiddenCount > 0 && (
+                <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => setCollapsedQuestions(false)}>
+                  <ChevronUp className="h-3 w-3 mr-1" />Show all {paperQuestions.length} questions ({hiddenCount} hidden)
+                </Button>
+              )}
+              {!collapsedQuestions && paperQuestions.length > 20 && (
+                <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => { setCollapsedQuestions(true); setShowCount(20); }}>
+                  <ChevronDown className="h-3 w-3 mr-1" />Show only latest 20
+                </Button>
+              )}
+
+              {visibleQuestions.map(q => (
+                <div key={q.id} className="flex items-start gap-2 p-2.5 rounded-md border bg-card text-sm group hover:border-primary/30 transition-colors">
+                  <span className="text-xs font-bold text-primary mt-0.5 w-8 shrink-0">Q{q.question_number}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm leading-snug">{q.question_text}</p>
+                    {q.question_type === 'mcq' && (
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-muted-foreground">
+                        {['A', 'B', 'C', 'D'].map(opt => {
+                          const val = q[`option_${opt.toLowerCase()}` as keyof Question] as string | null;
+                          if (!val) return null;
+                          const isCorrect = q.correct_answer?.toUpperCase() === opt;
+                          return (
+                            <span key={opt} className={isCorrect ? 'text-primary font-semibold' : ''}>
+                              {isCorrect && '✓'}{opt}. {val}
+                            </span>
+                          );
+                        })}
                       </div>
-                      <div className="flex gap-1 shrink-0">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditQuestion(q)}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteQuestion(q.id)}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    )}
+                    {q.correct_answer && q.question_type === 'descriptive' && (
+                      <p className="text-xs text-muted-foreground mt-0.5">Ans: {q.correct_answer}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Badge variant={q.question_type === 'mcq' ? 'secondary' : 'outline'} className="text-[10px] h-5">{q.marks}m</Badge>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => openEditQuestion(q)}>
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-destructive" onClick={() => handleDeleteQuestion(q.id)}>
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
               ))}
             </div>
           )}
 
-          {/* Add/Edit Question Dialog */}
-          <Dialog open={questionDialogOpen} onOpenChange={v => { setQuestionDialogOpen(v); if (!v) resetQForm(); }}>
+          {/* Edit Question Dialog */}
+          <Dialog open={editDialogOpen} onOpenChange={v => { setEditDialogOpen(v); if (!v) resetQForm(); }}>
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editingQuestion ? 'Edit Question' : 'Add Question'}</DialogTitle>
+                <DialogTitle>Edit Question {editingQuestion ? `#${editingQuestion.question_number}` : ''}</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSaveQuestion} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Type</Label>
-                    <Select value={qForm.question_type} onValueChange={v => setQForm(f => ({ ...f, question_type: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="mcq">MCQ</SelectItem>
-                        <SelectItem value="descriptive">Descriptive</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Marks</Label>
-                    <Input type="number" value={qForm.marks} onChange={e => setQForm(f => ({ ...f, marks: e.target.value }))} min="1" />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Question Text *</Label>
-                  <Textarea value={qForm.question_text} onChange={e => setQForm(f => ({ ...f, question_text: e.target.value }))} rows={3} placeholder="Enter the question..." />
-                </div>
-
-                {qForm.question_type === 'mcq' && (
-                  <div className="space-y-3">
-                    <Label>Options</Label>
-                    {['A', 'B', 'C', 'D'].map(opt => (
-                      <div key={opt} className="flex items-center gap-2">
-                        <span className="text-xs font-bold w-4">{opt}</span>
-                        <Input
-                          value={qForm[`option_${opt.toLowerCase()}` as keyof typeof qForm] as string}
-                          onChange={e => setQForm(f => ({ ...f, [`option_${opt.toLowerCase()}`]: e.target.value }))}
-                          placeholder={`Option ${opt}${opt <= 'B' ? ' *' : ' (optional)'}`}
-                        />
-                      </div>
-                    ))}
-                    <div className="space-y-2">
-                      <Label>Correct Answer</Label>
-                      <Select value={qForm.correct_answer} onValueChange={v => setQForm(f => ({ ...f, correct_answer: v }))}>
-                        <SelectTrigger><SelectValue placeholder="Select correct option" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="A">A</SelectItem>
-                          <SelectItem value="B">B</SelectItem>
-                          <SelectItem value="C">C</SelectItem>
-                          <SelectItem value="D">D</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                )}
-
-                {qForm.question_type === 'descriptive' && (
-                  <div className="space-y-2">
-                    <Label>Model Answer (optional)</Label>
-                    <Textarea value={qForm.correct_answer} onChange={e => setQForm(f => ({ ...f, correct_answer: e.target.value }))} rows={2} placeholder="Expected answer..." />
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label>Explanation (optional)</Label>
-                  <Textarea value={qForm.explanation} onChange={e => setQForm(f => ({ ...f, explanation: e.target.value }))} rows={2} placeholder="Why this is the correct answer..." />
-                </div>
-
-                <Button type="submit" className="w-full">{editingQuestion ? 'Save Changes' : 'Add Question'}</Button>
-              </form>
+              <QuestionForm onSubmit={handleEditSave} submitLabel="Save Changes" />
             </DialogContent>
           </Dialog>
         </div>
@@ -451,7 +513,7 @@ export default function QuestionPaperBuilder() {
     );
   }
 
-  // Main list view
+  // ============ PAPER LIST VIEW ============
   return (
     <DashboardLayout sidebarItems={adminSidebarItems} roleColor="admin">
       {loadingData ? (
@@ -515,12 +577,9 @@ export default function QuestionPaperBuilder() {
             </div>
           )}
 
-          {/* Create Paper Dialog */}
           <Dialog open={createPaperOpen} onOpenChange={setCreatePaperOpen}>
             <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>New Question Paper</DialogTitle>
-              </DialogHeader>
+              <DialogHeader><DialogTitle>New Question Paper</DialogTitle></DialogHeader>
               <form onSubmit={handleCreatePaper} className="space-y-4">
                 <div className="space-y-2">
                   <Label>Select Exam *</Label>
