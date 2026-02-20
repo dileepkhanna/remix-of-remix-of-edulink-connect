@@ -45,6 +45,8 @@ import TeacherMessages from "./pages/teacher/TeacherMessages";
 import TeacherTimetable from "./pages/teacher/TeacherTimetable";
 import TeacherLeads from "./pages/teacher/TeacherLeads";
 import TeacherGallery from "./pages/teacher/TeacherGallery";
+import TeacherSyllabus from "./pages/teacher/TeacherSyllabus";
+import TeacherWeeklyExams from "./pages/teacher/TeacherWeeklyExams";
 // Parent Pages
 import ParentDashboard from "./pages/parent/ParentDashboard";
 import ParentChild from "./pages/parent/ParentChild";
@@ -109,6 +111,8 @@ const App = () => (
             <Route path="/teacher/timetable" element={<TeacherTimetable />} />
             <Route path="/teacher/leads" element={<TeacherLeads />} />
             <Route path="/teacher/gallery" element={<TeacherGallery />} />
+            <Route path="/teacher/syllabus" element={<TeacherSyllabus />} />
+            <Route path="/teacher/weekly-exams" element={<TeacherWeeklyExams />} />
             <Route path="/teacher/messages" element={<TeacherMessages />} />
             
             {/* Parent Routes */}
