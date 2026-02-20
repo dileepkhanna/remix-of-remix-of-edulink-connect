@@ -159,6 +159,7 @@ export type Database = {
       }
       classes: {
         Row: {
+          academic_type: string | null
           academic_year: string
           class_teacher_id: string | null
           created_at: string | null
@@ -167,6 +168,7 @@ export type Database = {
           section: string
         }
         Insert: {
+          academic_type?: string | null
           academic_year?: string
           class_teacher_id?: string | null
           created_at?: string | null
@@ -175,6 +177,7 @@ export type Database = {
           section: string
         }
         Update: {
+          academic_type?: string | null
           academic_year?: string
           class_teacher_id?: string | null
           created_at?: string | null
@@ -219,6 +222,39 @@ export type Database = {
           status?: string | null
           subject?: string
           submitted_by?: string
+        }
+        Relationships: []
+      }
+      exam_cycles: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          cycle_number: number
+          end_date: string
+          exam_type: string
+          id: string
+          is_active: boolean | null
+          start_date: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          cycle_number?: number
+          end_date: string
+          exam_type: string
+          id?: string
+          is_active?: boolean | null
+          start_date: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          cycle_number?: number
+          end_date?: string
+          exam_type?: string
+          id?: string
+          is_active?: boolean | null
+          start_date?: string
         }
         Relationships: []
       }
@@ -850,6 +886,107 @@ export type Database = {
         }
         Relationships: []
       }
+      question_papers: {
+        Row: {
+          class_id: string
+          created_at: string | null
+          exam_id: string
+          id: string
+          total_marks: number
+          total_questions: number
+          uploaded_by: string | null
+        }
+        Insert: {
+          class_id: string
+          created_at?: string | null
+          exam_id: string
+          id?: string
+          total_marks?: number
+          total_questions?: number
+          uploaded_by?: string | null
+        }
+        Update: {
+          class_id?: string
+          created_at?: string | null
+          exam_id?: string
+          id?: string
+          total_marks?: number
+          total_questions?: number
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_papers_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_papers_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questions: {
+        Row: {
+          correct_answer: string | null
+          created_at: string | null
+          explanation: string | null
+          id: string
+          marks: number
+          option_a: string | null
+          option_b: string | null
+          option_c: string | null
+          option_d: string | null
+          question_number: number
+          question_paper_id: string
+          question_text: string
+          question_type: string
+        }
+        Insert: {
+          correct_answer?: string | null
+          created_at?: string | null
+          explanation?: string | null
+          id?: string
+          marks?: number
+          option_a?: string | null
+          option_b?: string | null
+          option_c?: string | null
+          option_d?: string | null
+          question_number?: number
+          question_paper_id: string
+          question_text: string
+          question_type?: string
+        }
+        Update: {
+          correct_answer?: string | null
+          created_at?: string | null
+          explanation?: string | null
+          id?: string
+          marks?: number
+          option_a?: string | null
+          option_b?: string | null
+          option_c?: string | null
+          option_d?: string | null
+          question_number?: number
+          question_paper_id?: string
+          question_text?: string
+          question_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_question_paper_id_fkey"
+            columns: ["question_paper_id"]
+            isOneToOne: false
+            referencedRelation: "question_papers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settings_audit_log: {
         Row: {
           changed_by: string
@@ -876,6 +1013,112 @@ export type Database = {
           setting_key?: string
         }
         Relationships: []
+      }
+      student_exam_answers: {
+        Row: {
+          answered_at: string | null
+          exam_id: string
+          id: string
+          is_correct: boolean | null
+          marks_awarded: number | null
+          question_id: string
+          selected_answer: string | null
+          student_id: string
+        }
+        Insert: {
+          answered_at?: string | null
+          exam_id: string
+          id?: string
+          is_correct?: boolean | null
+          marks_awarded?: number | null
+          question_id: string
+          selected_answer?: string | null
+          student_id: string
+        }
+        Update: {
+          answered_at?: string | null
+          exam_id?: string
+          id?: string
+          is_correct?: boolean | null
+          marks_awarded?: number | null
+          question_id?: string
+          selected_answer?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_exam_answers_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_exam_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_exam_answers_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_exam_results: {
+        Row: {
+          created_at: string | null
+          exam_id: string
+          id: string
+          obtained_marks: number
+          percentage: number | null
+          rank: number | null
+          student_id: string
+          submitted_at: string | null
+          total_marks: number
+        }
+        Insert: {
+          created_at?: string | null
+          exam_id: string
+          id?: string
+          obtained_marks?: number
+          percentage?: number | null
+          rank?: number | null
+          student_id: string
+          submitted_at?: string | null
+          total_marks?: number
+        }
+        Update: {
+          created_at?: string | null
+          exam_id?: string
+          id?: string
+          obtained_marks?: number
+          percentage?: number | null
+          rank?: number | null
+          student_id?: string
+          submitted_at?: string | null
+          total_marks?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_exam_results_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_exam_results_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_parents: {
         Row: {
@@ -1034,24 +1277,155 @@ export type Database = {
       }
       subjects: {
         Row: {
+          category: string | null
           code: string | null
           created_at: string | null
+          exam_type: string | null
           id: string
           name: string
         }
         Insert: {
+          category?: string | null
           code?: string | null
           created_at?: string | null
+          exam_type?: string | null
           id?: string
           name: string
         }
         Update: {
+          category?: string | null
           code?: string | null
           created_at?: string | null
+          exam_type?: string | null
           id?: string
           name?: string
         }
         Relationships: []
+      }
+      syllabus: {
+        Row: {
+          chapter_name: string
+          class_id: string
+          created_at: string | null
+          created_by: string | null
+          cycle_id: string | null
+          exam_type: string | null
+          id: string
+          schedule_date: string | null
+          schedule_time: string | null
+          subject_id: string
+          syllabus_type: string
+          topic_name: string
+          week_number: number | null
+        }
+        Insert: {
+          chapter_name: string
+          class_id: string
+          created_at?: string | null
+          created_by?: string | null
+          cycle_id?: string | null
+          exam_type?: string | null
+          id?: string
+          schedule_date?: string | null
+          schedule_time?: string | null
+          subject_id: string
+          syllabus_type?: string
+          topic_name: string
+          week_number?: number | null
+        }
+        Update: {
+          chapter_name?: string
+          class_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          cycle_id?: string | null
+          exam_type?: string | null
+          id?: string
+          schedule_date?: string | null
+          schedule_time?: string | null
+          subject_id?: string
+          syllabus_type?: string
+          topic_name?: string
+          week_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "syllabus_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "syllabus_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "exam_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "syllabus_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      syllabus_schedule: {
+        Row: {
+          class_id: string
+          created_at: string | null
+          date: string
+          end_time: string
+          id: string
+          start_time: string
+          syllabus_id: string
+          teacher_id: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string | null
+          date: string
+          end_time: string
+          id?: string
+          start_time: string
+          syllabus_id: string
+          teacher_id: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string | null
+          date?: string
+          end_time?: string
+          id?: string
+          start_time?: string
+          syllabus_id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "syllabus_schedule_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "syllabus_schedule_syllabus_id_fkey"
+            columns: ["syllabus_id"]
+            isOneToOne: false
+            referencedRelation: "syllabus"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "syllabus_schedule_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teacher_classes: {
         Row: {
@@ -1116,6 +1490,45 @@ export type Database = {
             foreignKeyName: "teacher_lead_permissions_teacher_id_fkey"
             columns: ["teacher_id"]
             isOneToOne: true
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_syllabus_map: {
+        Row: {
+          created_at: string | null
+          id: string
+          role_type: string
+          syllabus_id: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role_type?: string
+          syllabus_id: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role_type?: string
+          syllabus_id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_syllabus_map_syllabus_id_fkey"
+            columns: ["syllabus_id"]
+            isOneToOne: false
+            referencedRelation: "syllabus"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_syllabus_map_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
             referencedRelation: "teachers"
             referencedColumns: ["id"]
           },
@@ -1235,6 +1648,114 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      weekly_exam_syllabus: {
+        Row: {
+          created_at: string | null
+          exam_id: string
+          id: string
+          syllabus_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          exam_id: string
+          id?: string
+          syllabus_id: string
+        }
+        Update: {
+          created_at?: string | null
+          exam_id?: string
+          id?: string
+          syllabus_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_exam_syllabus_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_exam_syllabus_syllabus_id_fkey"
+            columns: ["syllabus_id"]
+            isOneToOne: false
+            referencedRelation: "syllabus"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_exams: {
+        Row: {
+          class_id: string
+          created_at: string | null
+          created_by: string | null
+          cycle_id: string | null
+          duration_minutes: number
+          exam_date: string
+          exam_time: string
+          exam_title: string
+          id: string
+          negative_marking: boolean | null
+          negative_marks_value: number | null
+          reminder_enabled: boolean | null
+          status: string
+          syllabus_type: string
+          total_marks: number
+          week_number: number | null
+        }
+        Insert: {
+          class_id: string
+          created_at?: string | null
+          created_by?: string | null
+          cycle_id?: string | null
+          duration_minutes?: number
+          exam_date: string
+          exam_time: string
+          exam_title: string
+          id?: string
+          negative_marking?: boolean | null
+          negative_marks_value?: number | null
+          reminder_enabled?: boolean | null
+          status?: string
+          syllabus_type?: string
+          total_marks?: number
+          week_number?: number | null
+        }
+        Update: {
+          class_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          cycle_id?: string | null
+          duration_minutes?: number
+          exam_date?: string
+          exam_time?: string
+          exam_title?: string
+          id?: string
+          negative_marking?: boolean | null
+          negative_marks_value?: number | null
+          reminder_enabled?: boolean | null
+          status?: string
+          syllabus_type?: string
+          total_marks?: number
+          week_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_exams_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_exams_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "exam_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
