@@ -53,6 +53,7 @@ import ParentChild from "./pages/parent/ParentChild";
 import ParentAttendance from "./pages/parent/ParentAttendance";
 import ParentTimetable from "./pages/parent/ParentTimetable";
 import ParentHomework from "./pages/parent/ParentHomework";
+import ParentSyllabus from "./pages/parent/ParentSyllabus";
 import ParentExams from "./pages/parent/ParentExams";
 import ParentProgress from "./pages/parent/ParentProgress";
 import ParentAnnouncements from "./pages/parent/ParentAnnouncements";
@@ -121,6 +122,7 @@ const App = () => (
             <Route path="/parent/attendance" element={<ParentAttendance />} />
             <Route path="/parent/timetable" element={<ParentTimetable />} />
             <Route path="/parent/homework" element={<ParentHomework />} />
+            <Route path="/parent/syllabus" element={<ParentSyllabus />} />
             <Route path="/parent/exams" element={<ParentExams />} />
             <Route path="/parent/progress" element={<ParentProgress />} />
             <Route path="/parent/announcements" element={<ParentAnnouncements />} />
